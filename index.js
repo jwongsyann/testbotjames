@@ -39,9 +39,9 @@ const WIT_TOKEN = process.env.WIT_TOKEN;
 // Messenger API parameters
 const FB_PAGE_TOKEN = process.env.FB_PAGE_TOKEN;
 if (!FB_PAGE_TOKEN) { throw new Error('missing FB_PAGE_TOKEN') }
-const FB_APP_SECRET = process.env.FB_APP_SECRET;
+  const FB_APP_SECRET = process.env.FB_APP_SECRET;
 if (!FB_APP_SECRET) { throw new Error('missing FB_APP_SECRET') }
-const FB_VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN;
+  const FB_VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN;
 if (!FB_VERIFY_TOKEN) { throw new Error('missing FB_VERIFY_TOKEN') }
 
 /* Example from witai uses a dynamic verify token. Changed to static for now.
@@ -108,9 +108,9 @@ const findOrCreateSession = (fbid) => {
 // Define function required in getForecast
 const firstEntityValue = (entities, entity) => {
   const val = entities && entities[entity] &&
-    Array.isArray(entities[entity]) &&
-    entities[entity].length > 0 &&
-    entities[entity][0].value
+  Array.isArray(entities[entity]) &&
+  entities[entity].length > 0 &&
+  entities[entity][0].value
   ;
   if (!val) {
     return null;
@@ -136,7 +136,7 @@ const actions = {
           recipientId,
           ':',
           err.stack || err
-        );
+          );
       });
     } else {
       console.error('Oops! Couldn\'t find user for session:', sessionId);
@@ -145,9 +145,9 @@ const actions = {
     }
   },
   getForecast({context, entities}) {
-  return new Promise(function(resolve, reject) {
-    var location = firstEntityValue(entities, "location")
-    if (location) {
+    return new Promise(function(resolve, reject) {
+      var location = firstEntityValue(entities, "location")
+      if (location) {
       context.forecast = 'sunny in ' + location; // we should call a weather API here
       delete context.missingLocation;
     } else {
@@ -181,9 +181,9 @@ app.get('/webhook', (req, res) => {
   if (req.query['hub.mode'] === 'subscribe' &&
     req.query['hub.verify_token'] === FB_VERIFY_TOKEN) {
     res.send(req.query['hub.challenge']);
-  } else {
-    res.sendStatus(400);
-  }
+} else {
+  res.sendStatus(400);
+}
 });
 
 // Message handler
@@ -214,7 +214,11 @@ app.post('/webhook', (req, res) => {
             fbMessage(sender, 'Sorry I can only process text messages for now.')
             .catch(console.error);
           } else if (text) {
-            // We received a text message
+
+            if (text=="Generic") {
+              sendGenericMessage(sender)
+            } else {
+              // We received a text message
 
             // Let's forward the message to the Wit.ai Bot Engine
             // This will run all actions until our bot has nothing left to do
@@ -222,7 +226,7 @@ app.post('/webhook', (req, res) => {
               sessionId, // the user's current session
               text, // the user's message
               sessions[sessionId].context // the user's current session state
-            ).then((context) => {
+              ).then((context) => {
               // Our bot did everything it has to do.
               // Now it's waiting for further messages to proceed.
               console.log('Waiting for next user messages');
@@ -237,9 +241,26 @@ app.post('/webhook', (req, res) => {
               // Updating the user's current session state
               sessions[sessionId].context = context;
             })
-            .catch((err) => {
-              console.error('Oops! Got an error from Wit: ', err.stack || err);
-            })
+              .catch((err) => {
+                console.error('Oops! Got an error from Wit: ', err.stack || err);
+              })  
+            }
+            
+          }
+        } else if (event.postback) {
+
+          // This is to handle postbacks from cards
+          const sender = event.sender.id;
+
+          // We retrieve the user's current session, or create one if it doesn't exist
+          // This is needed for our bot to figure out the conversation history
+          const sessionId = findOrCreateSession(sender);
+
+          // This is to check for new users who will send the Get Started postback.
+          let text = JSON.stringify(event.postback.payload);
+          if (text=='"newConvo"') {
+            fbMessage(sender,"Thanks for coming by!")
+            .catch(console.error);
           }
         } else {
           console.log('received event', JSON.stringify(event));
@@ -258,7 +279,7 @@ app.post('/webhook', (req, res) => {
  * https://developers.facebook.com/docs/graph-api/webhooks#setup
  *
  */
-function verifyRequestSignature(req, res, buf) {
+ function verifyRequestSignature(req, res, buf) {
   var signature = req.headers["x-hub-signature"];
 
   if (!signature) {
@@ -271,14 +292,65 @@ function verifyRequestSignature(req, res, buf) {
     var signatureHash = elements[1];
 
     var expectedHash = crypto.createHmac('sha1', FB_APP_SECRET)
-                        .update(buf)
-                        .digest('hex');
+    .update(buf)
+    .digest('hex');
 
     if (signatureHash != expectedHash) {
       throw new Error("Couldn't validate the request signature.");
     }
   }
 }
+
+
+function sendGenericMessage(sender) {
+  let messageData = {
+    "attachment": {
+      "type": "template",
+      "payload": {
+        "template_type": "generic",
+        "elements": [{
+          "title": "First card",
+          "subtitle": "Element #1 of an hscroll",
+          "image_url": "http://messengerdemo.parseapp.com/img/rift.png",
+          "buttons": [{
+            "type": "web_url",
+            "url": "https://www.messenger.com",
+            "title": "web url"
+          }, {
+            "type": "postback",
+            "title": "Postback",
+            "payload": "Payload for first element in a generic bubble",
+          }],
+        }, {
+          "title": "Second card",
+          "subtitle": "Element #2 of an hscroll",
+          "image_url": "http://messengerdemo.parseapp.com/img/gearvr.png",
+          "buttons": [{
+            "type": "postback",
+            "title": "Postback",
+            "payload": "Payload for second element in a generic bubble",
+          }],
+        }]
+      }
+    }
+  }
+  request({
+    url: 'https://graph.facebook.com/v2.6/me/messages',
+    qs: {access_token:encodeURIComponent(FB_PAGE_TOKEN)},
+    method: 'POST',
+    json: {
+      recipient: {id:sender},
+      message: messageData,
+    }
+  }, function(error, response, body) {
+    if (error) {
+      console.log('Error sending messages: ', error)
+    } else if (response.body.error) {
+      console.log('Error: ', response.body.error)
+    }
+  })
+}
+
 
 app.listen(PORT);
 console.log('Listening on :' + PORT + '...');
