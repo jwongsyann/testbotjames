@@ -60,6 +60,7 @@ crypto.randomBytes(8, (err, buff) => {
 // See the Send API reference
 // https://developers.facebook.com/docs/messenger-platform/send-api-reference
 
+// General FB message for any text.
 const fbMessage = (id, text) => {
   const body = JSON.stringify({
     recipient: { id },
@@ -218,7 +219,7 @@ app.post('/webhook', (req, res) => {
             if (text=="Generic") {
               sendGenericMessage(sender)
             } else {
-              // We received a text message
+            // We received a text message
 
             // Let's forward the message to the Wit.ai Bot Engine
             // This will run all actions until our bot has nothing left to do
@@ -259,13 +260,47 @@ app.post('/webhook', (req, res) => {
           // This is to check for new users who will send the Get Started postback.
           let text = JSON.stringify(event.postback.payload);
           if (text=='"newConvo"') {
-            fbMessage(sender,"Thanks for coming by!")
+
+            // Send greetings
+            fbMessage(sender,"Hi! The name's James.")
             .catch(console.error);
-          }
-        } else {
-          console.log('received event', JSON.stringify(event));
-        }
-      });
+
+            // Give quick replies options
+            const body = JSON.stringify({
+              recipient: { sender },
+              message: { "Shall we begin?" },
+              quick_replies: [
+              {
+                "content_type": "text",
+                "title": "Let's go!",
+                "payload": "go"
+              },
+
+              {
+                "content_type": "text",
+                "title": "Who are you again?",
+                "payload": "restart"
+              }
+              ],
+            })
+
+            const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
+            fetch('https://graph.facebook.com/me/messages?' + qs, {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body,
+            }).then(rsp => rsp.json())
+            .then(json => {
+              if (json.error && json.error.message) {
+                throw new Error(json.error.message);
+              }
+              return json;
+            });
+          };
+      } else {
+        console.log('received event', JSON.stringify(event));
+      }
+    });
     });
   }
   res.sendStatus(200);
