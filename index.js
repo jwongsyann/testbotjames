@@ -60,7 +60,7 @@ crypto.randomBytes(8, (err, buff) => {
 // See the Send API reference
 // https://developers.facebook.com/docs/messenger-platform/send-api-reference
 
-// General FB message for any text.
+// General FB message for any text. ////noquickreply
 const fbMessage = (id, text) => {
   const body = JSON.stringify({
     recipient: { id },
@@ -265,23 +265,20 @@ app.post('/webhook', (req, res) => {
             fbMessage(sender,"Hi! The name's James.")
             .catch(console.error);
 
-            // Give quick replies options
+            // Give quick replies options  ////quickreply
             const body = JSON.stringify({
-              recipient: { sender },
-              message: { "Shall we begin?" },
+              recipient: sender,
+              message: "Shall we begin?",
               quick_replies: [
               {
                 "content_type": "text",
                 "title": "Let's go!",
-                "payload": "go"
-              },
-
-              {
+                "payload": "go",
+              },{
                 "content_type": "text",
                 "title": "Who are you again?",
-                "payload": "restart"
-              }
-              ]
+                "payload": "restart",
+              }]
             });
 
             const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
