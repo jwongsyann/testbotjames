@@ -281,7 +281,7 @@ app.post('/webhook', (req, res) => {
                 "title": "Who are you again?",
                 "payload": "restart"
               }
-              ],
+              ]
             })
 
             const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
