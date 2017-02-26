@@ -265,6 +265,10 @@ app.post('/webhook', (req, res) => {
             fbMessage(sender,"Hi! The name's James.")
             .catch(console.error);
 
+            // Explain purpose
+            fbMessage(sender,"I'm here to tell you where you should eat!")
+            .catch(console.error);
+
             // Give quick replies options  ////quickreply
             const body = JSON.stringify({
               recipient: sender,
