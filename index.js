@@ -281,7 +281,7 @@ app.post('/webhook', (req, res) => {
             });
 
             // Give quick replies options  ////quickreply
-            body = JSON.stringify({
+            const body2 = JSON.stringify({
               recipient: sender,
               message: "Shall we begin?",
               quick_replies: [
@@ -299,7 +299,7 @@ app.post('/webhook', (req, res) => {
             fetch('https://graph.facebook.com/me/messages?' + qs, {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
-              body,
+              body2,
             }).then(rsp => rsp.json())
             .then(json => {
               if (json.error && json.error.message) {
