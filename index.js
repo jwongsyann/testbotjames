@@ -282,7 +282,7 @@ app.post('/webhook', (req, res) => {
                 "payload": "restart"
               }
               ]
-            })
+            });
 
             const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
             fetch('https://graph.facebook.com/me/messages?' + qs, {
