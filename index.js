@@ -261,16 +261,27 @@ app.post('/webhook', (req, res) => {
           let text = JSON.stringify(event.postback.payload);
           if (text=='"newConvo"') {
 
-            // Send greetings
-            fbMessage(sender,"Hi! The name's James.")
-            .catch(console.error);
+            // Introduction
+            const body = JSON.stringify({
+              recipient: sender,
+              message: "Shall we begin?"
+            });
 
-            // Explain purpose
-            fbMessage(sender,"I'm here to tell you where you should eat!")
-            .catch(console.error);
+            const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
+            fetch('https://graph.facebook.com/me/messages?' + qs, {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body,
+            }).then(rsp => rsp.json())
+            .then(json => {
+              if (json.error && json.error.message) {
+                throw new Error(json.error.message);
+              }
+              return json;
+            });
 
             // Give quick replies options  ////quickreply
-            const body = JSON.stringify({
+            body = JSON.stringify({
               recipient: sender,
               message: "Shall we begin?",
               quick_replies: [
@@ -285,7 +296,6 @@ app.post('/webhook', (req, res) => {
               }]
             });
 
-            const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
             fetch('https://graph.facebook.com/me/messages?' + qs, {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
