@@ -279,34 +279,6 @@ app.post('/webhook', (req, res) => {
               }
               return json;
             });
-
-            // Give quick replies options  ////quickreply
-            const body2 = JSON.stringify({
-              recipient: sender,
-              message: "Shall we begin?",
-              quick_replies: [
-              {
-                "content_type": "text",
-                "title": "Let's go!",
-                "payload": "go",
-              },{
-                "content_type": "text",
-                "title": "Who are you again?",
-                "payload": "restart",
-              }]
-            });
-
-            fetch('https://graph.facebook.com/me/messages?' + qs, {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body2,
-            }).then(rsp => rsp.json())
-            .then(json => {
-              if (json.error && json.error.message) {
-                throw new Error(json.error.message);
-              }
-              return json;
-            });
           };
       } else {
         console.log('received event', JSON.stringify(event));
