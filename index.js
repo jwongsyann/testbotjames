@@ -216,8 +216,33 @@ app.post('/webhook', (req, res) => {
             .catch(console.error);
           } else if (text) {
 
-            if (text=="Generic") {
-              sendGenericMessage(sender)
+            if (text=="Let's go!" || text=="I'm hungry!") {
+            
+            // Quick reply to request for location
+            const body = JSON.stringify({
+              recipient: {id:sender},
+              message: {
+                text:"Please share your location.",
+                quick_replies: [
+                  {
+                    "content_type":"location"
+                  }
+                ]
+              }
+            });
+
+            const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
+            fetch('https://graph.facebook.com/me/messages?' + qs, {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body,
+            }).then(rsp => rsp.json())
+            .then(json => {
+              if (json.error && json.error.message) {
+                throw new Error(json.error.message);
+              }
+              return json;
+            });
             } else {
             // We received a text message
 
