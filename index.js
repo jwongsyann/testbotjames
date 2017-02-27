@@ -53,6 +53,18 @@ crypto.randomBytes(8, (err, buff) => {
 });
 */
 
+// ----------------------------------------------------------------------------
+// Yelp API specific code
+
+// Request API access: http://www.yelp.com/developers/getting_started/api_access
+var Yelp = require('yelp');
+
+var yelp = new Yelp({
+  consumer_key: 'ShYtePAxJPwxsHrhFkmoRg',
+  consumer_secret: 'RdZjBUZjZolSaPEQRRY84nqW6-w',
+  token: 'aMWeZFE0imbyURlZFCcDJJ-YVHWqPuRf',
+  token_secret: 'OmYUC2zJf183GSorTjrCx1xz-dk',
+});
 
 // ----------------------------------------------------------------------------
 // Messenger API specific code
@@ -212,21 +224,45 @@ app.post('/webhook', (req, res) => {
           if (attachments) {
             // We received an attachment
             // Let's reply with an automatic message
-            fbMessage(sender, 'Sorry I can only process text messages for now.')
-            .catch(console.error);
+            //fbMessage(sender, 'Sorry I can only process text messages for now.')
+            //.catch(console.error);
+
+            // First need to identify if attachment was a shared location
+            if (attachments[0].type=="location") {
+
+              let lat = attachments[0].payload.coordinates.lat;
+
+              let long = attachments[0].payload.coordinates.long;
+
+              fbMessage(sender,"received location of lat:" + lat + " long:" + long);
+
+              // See http://www.yelp.com/developers/documentation/v2/search_api
+              yelp.search({ term: 'food', ll: lat+","+long, limit: 1})
+              .then(function (data) {
+                var jsonString = JSON.stringify(data);
+                jsonString = JSON.parse(jsonString);
+                var jsonBiz = jsonString.businesses;
+                fbMessage(sender, "I have one option for you and that is " + jsonBiz[0].name);
+              })
+              .catch(function (err) {
+                console.error(err);
+              });
+
+            }
+
           } else if (text) {
 
             if (text=="Let's go!" || text=="I'm hungry!") {
-            
+
             // Quick reply to request for location
             const body = JSON.stringify({
               recipient: {id:sender},
               message: {
                 text:"Please share your location.",
                 quick_replies: [
-                  {
-                    "content_type":"location"
-                  }
+                {
+                  "content_type":"location"
+                }
                 ]
               }
             });
@@ -243,7 +279,7 @@ app.post('/webhook', (req, res) => {
               }
               return json;
             });
-            } else {
+          } else {
             // We received a text message
 
             // Let's forward the message to the Wit.ai Bot Engine
@@ -295,16 +331,16 @@ app.post('/webhook', (req, res) => {
               message: {
                 text:"Shall we begin?",
                 quick_replies: [
-                  {
-                    "content_type":"text",
-                    "title":"Let's go!",
-                    "payload":"go"
-                  },
-                  {
-                    "content_type":"text",
-                    "title":"I'm hungry!",
-                    "payload":"go" 
-                  }
+                {
+                  "content_type":"text",
+                  "title":"Let's go!",
+                  "payload":"go"
+                },
+                {
+                  "content_type":"text",
+                  "title":"I'm hungry!",
+                  "payload":"go" 
+                }
                 ]
               }
             });
@@ -322,13 +358,13 @@ app.post('/webhook', (req, res) => {
               return json;
             });
           };
-      } else {
-        console.log('received event', JSON.stringify(event));
-      }
-    });
-    });
-  }
-  res.sendStatus(200);
+        } else {
+          console.log('received event', JSON.stringify(event));
+        }
+      });
+});
+}
+res.sendStatus(200);
 });
 
 /*
