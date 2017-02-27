@@ -262,9 +262,26 @@ app.post('/webhook', (req, res) => {
           if (text=='"newConvo"') {
 
             // Introduction
+            fbMessage(sender,"Name's James. I give you the best places to eat.")
+
+            // Quick replies
             const body = JSON.stringify({
-              recipient: sender,
-              message: "Shall we begin?"
+              recipient: {id:sender},
+              message: {
+                text:"Shall we begin?",
+                quick_replies: [
+                  {
+                    "content_type":"text",
+                    "title":"Let's go!",
+                    "payload":"go"
+                  },
+                  {
+                    "content_type":"text",
+                    "title":"I'm hungry!",
+                    "payload":"go" 
+                  }
+                ]
+              }
             });
 
             const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
