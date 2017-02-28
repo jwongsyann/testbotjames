@@ -94,7 +94,7 @@ const fbMessage = (id, text) => {
 };
 
 // Generic template for one input
-const fbGenericTemplate = (id, name, image_url, url, category, phone_number, rating) => {
+const fbGenericTemplate = (id, name, image_url, url, category, phone_number, rating, map_lat, map_long) => {
   const body = JSON.stringify({
     recipient: { id },
     message: {
@@ -117,6 +117,11 @@ const fbGenericTemplate = (id, name, image_url, url, category, phone_number, rat
               type: "phone_number",
               title: "Call",
               payload: phone_number
+            },
+            {
+              type: "web_url",
+              title: "Show Map",
+              url: "http:\/\/maps.apple.com\/maps?q="+map_lat+","+map_long+"&z=16"           
             }
             ]
           }
@@ -290,23 +295,54 @@ app.post('/webhook', (req, res) => {
                 var jsonString = JSON.stringify(data);
                 jsonString = JSON.parse(jsonString);
                 var jsonBiz = jsonString.businesses;
-                var jsonCat = '';
+                var jsonName = [jsonBiz[0].name]; 
+                var jsonUrl = [jsonBiz[0].url];
+                var jsonCat = [''];
                 var i = 0;
                 if (i == jsonBiz[0].categories.length-1) {
-                  jsonCat = jsonBiz[0].categories[0][0];
+                  jsonCat[0] = jsonBiz[0].categories[0][0];
                 } else {
                   do {
-                    jsonCat += jsonBiz[0].categories[i][0] + ", ";
+                    jsonCat[0] += jsonBiz[0].categories[i][0] + ", ";
                     i++;
                   } while (i < jsonBiz[0].categories.length);
                 }
-                var image_url = jsonBiz[0].image_url;
-                image_url = image_url.replace("ms.jpg","o.jpg");
-                var jsonNumber = jsonBiz[0].phone;
-                var jsonRating = jsonBiz[0].rating;
+                var image_url = [jsonBiz[0].image_url];
+                image_url[0] = image_url[0].replace("ms.jpg","o.jpg");
+                var jsonNumber = [jsonBiz[0].phone];
+                var jsonRating = [jsonBiz[0].rating];
+                var jsonMapLat = [jsonBiz[0].location.coordinate.latitude];
+                var jsonMapLong = [jsonBiz[0].location.coordinate.longitude];
+
+                // Store all results
+                i = 0;
+                if (i != jsonBiz.length-1) {
+                  do {
+                    jsonName[i] = jsonBiz[i].name; 
+                    jsonUrl[i] = jsonBiz[i].url;
+                    jsonCat[i] = '';
+                    var j = 0;
+                    if (j == jsonBiz[i].categories.length-1) {
+                      jsonCat[i] = jsonBiz[i].categories[0][0];
+                    } else {
+                      do {
+                        jsonCat[i] += jsonBiz[i].categories[j][0] + ", ";
+                        j++;
+                      } while (j < jsonBiz[i].categories.length);
+                    }
+                    image_url[i] = jsonBiz[i].image_url;
+                    image_url[i] = image_url[i].replace("ms.jpg","o.jpg");
+                    jsonNumber[i] = jsonBiz[i].phone;
+                    jsonRating[i] = jsonBiz[i].rating;
+                    jsonMapLat[i] = jsonBiz[i].location.coordinate.latitude;
+                    jsonMapLong[i] = jsonBiz[i].location.coordinate.longitude;
+                    i++;
+                  } while (i < jsonBiz.length);
+                }
 
                 fbMessage(sender, "How about this?" );
-                fbGenericTemplate(sender, jsonBiz[0].name, image_url, jsonBiz[0].url, jsonCat, jsonNumber, jsonRating);
+                fbGenericTemplate(sender, jsonName[0], image_url[0], jsonUrl[0], jsonCat[0], jsonNumber[0], jsonRating[0], jsonMapLat[0], jsonMapLong[0]);
+                var responseCounter = 0;
               })
               .catch(function (err) {
                 console.error(err);
