@@ -45,6 +45,16 @@ if (!FB_APP_SECRET) { throw new Error('missing FB_APP_SECRET') }
 const FB_VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN;
 if (!FB_VERIFY_TOKEN) { throw new Error('missing FB_VERIFY_TOKEN') }
 
+// Yelp API parameters
+const YELP_CONSUMER_KEY = process.env.YELP_CONSUMER_KEY;
+if (!YELP_CONSUMER_KEY) { throw new Error('missing YELP_CONSUMER_KEY') }
+const YELP_CONSUMER_SECRET = process.env.YELP_CONSUMER_SECRET;
+if (!YELP_CONSUMER_SECRET) { throw new Error('missing YELP_CONSUMER_SECRET') }
+const YELP_TOKEN = process.env.YELP_TOKEN;
+if (!YELP_TOKEN) { throw new Error('missing YELP_TOKEN') }
+const YELP_TOKEN_SECRET = process.env.YELP_TOKEN_SECRET;
+if (!YELP_TOKEN_SECRET) { throw new Error('missing YELP_TOKEN_SECRET') }
+
 // ----------------------------------------------------------------------------
 // Messenger API specific code
 
@@ -325,10 +335,10 @@ const wit = new Wit({
 var Yelp = require('yelp');
 
 var yelp = new Yelp({
-        consumer_key: 'ShYtePAxJPwxsHrhFkmoRg',
-        consumer_secret: 'RdZjBUZjZolSaPEQRRY84nqW6-w',
-        token: 'aMWeZFE0imbyURlZFCcDJJ-YVHWqPuRf',
-        token_secret: 'OmYUC2zJf183GSorTjrCx1xz-dk',
+        consumer_key: YELP_CONSUMER_KEY,
+        consumer_secret: YELP_CONSUMER_SECRET,
+        token: YELP_TOKEN,
+        token_secret: YELP_TOKEN_SECRET,
 });
 
 // Intialize variables that we will save to global
