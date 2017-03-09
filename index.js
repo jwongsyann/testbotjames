@@ -241,6 +241,27 @@ const fbNextChoice = (id) => {
         });
 };
 
+// Adapted FB function to send Wit messages and quick replies
+const fbWitMessage = (id, data) => {
+        const body = JSON.stringify({
+                recipient: { id },
+                message: data,
+        });
+        const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
+        return fetch('https://graph.facebook.com/me/messages?' + qs, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body,
+        })
+        .then(rsp => rsp.json())
+        .then(json => {
+        if (json.error && json.error.message) {
+                throw new Error(json.error.message);
+        }
+        return json;
+        });
+};
+
 // ----------------------------------------------------------------------------
 // Wit.ai bot specific code
 
@@ -280,7 +301,7 @@ const firstEntityValue = (entities, entity) => {
 
 // Our bot actions
 const actions = {
-        send({sessionId}, {text}) {
+        send({sessionId}, response) {
                 // Our bot has something to say!
                 // Let's retrieve the Facebook user whose session belongs to
                 const recipientId = sessions[sessionId].fbid;
@@ -288,7 +309,17 @@ const actions = {
                         // Yay, we found our recipient!
                         // Let's forward our bot response to her.
                         // We return a promise to let our bot know when we're done sending
-                        return fbMessage(recipientId, text)
+
+                        // This part of the code is adapted for quick replies
+                        if (response.quickreplies) {
+                        	response.quick_replies=[]; // Renamed quick reply object from Wit
+                        	for (var i = 0, len = response.quickreplies.length; i < len; i++) { // Loop through quickreplies
+								response.quick_replies.push({ title: response.quickreplies[i], content_type: 'text', payload: 'CUSTOM_WIT_AI_QUICKREPLY_ID' + i });
+							}
+							delete response.quickreplies;
+                        }
+
+                        return fbWitMessage(recipientId, response)
                         .then(() => null)
                         .catch((err) => {
                                 console.error(
