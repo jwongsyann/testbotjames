@@ -299,6 +299,8 @@ const firstEntityValue = (entities, entity) => {
         return typeof val === 'object' ? val.value : val;
 };
 
+
+
 // Our bot actions
 const actions = {
         send({sessionId}, response) {
@@ -337,7 +339,10 @@ const actions = {
         },
         // You should implement your custom actions here
         // See https://wit.ai/docs/quickstart
-        getForecast({context, entities}) {
+		greetings({context, entities}) {
+		        },
+				
+		getForecast({context, entities}) {
                 return new Promise(function(resolve, reject) {
                         var location = firstEntityValue(entities, "location");
                         if (location) {
@@ -350,7 +355,46 @@ const actions = {
                         return resolve(context);
                 });
         },
-};
+      
+		getLocation({context, entities}) {
+			return new Promise(function(resolve, reject) {        
+				const fbAskForLocation = (id) => {
+				        const body = JSON.stringify({
+				                recipient: { id },
+				                message: {
+				                        text:"Please share your current location or the drop the pin in the region of where you would like to eat.",
+				                        quick_replies: 
+				                                [
+				                                        {
+				                                        "content_type":"location"
+				                                        }
+				                                ]
+				                }
+				        });
+
+				        const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
+				        fetch('https://graph.facebook.com/me/messages?' + qs, {
+				                method: 'POST',
+				                headers: {'Content-Type': 'application/json'},
+				                body,
+				        })
+				        .then(rsp => rsp.json())
+				        .then(json => {
+				                if (json.error && json.error.message) {
+				                throw new Error(json.error.message);
+				                }
+				                return json;
+				        });
+				}
+		  return resolve(context);
+        
+                 });}
+			
+			,
+
+
+		
+	}; //must keep this 
 
 // Setting up our bot
 const wit = new Wit({
