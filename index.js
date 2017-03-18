@@ -610,7 +610,6 @@ app.post('/webhook', (req, res) => {
                                                         })
                                                         .then(function (data) {
                                                                 if (data) {
-                                                                        console.log(jsonIsOpenNow);
                                                                         fbNextChoice(sender);
                                                                 }
                                                         })                                                        
@@ -654,7 +653,12 @@ app.post('/webhook', (req, res) => {
                                                                         console.log(responseCounter);
                                                                 }
                                                                 if (responseCounter < jsonName.length && responseCounter != 0) {
-                                                                        fbYelpTemplate(
+                                                                        yelpBiz.business(jsonId[responseCounter])
+                                                                        .then(function (data) {
+                                                                            saveYelpBusinessOutput(data);
+                                                                        })
+                                                                        .then(function (data) {
+                                                                            fbYelpTemplate(
                                                                                 sender,
                                                                                 jsonName[responseCounter],
                                                                                 jsonImage[responseCounter],
@@ -663,8 +667,11 @@ app.post('/webhook', (req, res) => {
                                                                                 jsonNumber[responseCounter],
                                                                                 jsonRating[responseCounter],
                                                                                 jsonMapLat[responseCounter],
-                                                                                jsonMapLong[responseCounter]
-                                                                        ).then(function(){
+                                                                                jsonMapLong[responseCounter],
+                                                                                jsonIsOpenNow
+                                                                            )
+                                                                        })
+                                                                        .then(function (data) {
                                                                                 fbNextChoice(sender);
                                                                         }).catch(function(err) {
                                                                                 console.error(err);
