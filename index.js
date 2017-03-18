@@ -61,6 +61,9 @@ if (!YELP_TOKEN_SECRET) { throw new Error('missing YELP_TOKEN_SECRET') }
 // See the Send API reference
 // https://developers.facebook.com/docs/messenger-platform/send-api-reference
 
+// Save latitude and longitude to global for reuse for yelp api call
+var lat = '';
+var long = '';
 
 // Generic function to send any message
 const fbMessage = (id, text) => {
@@ -151,7 +154,7 @@ const fbAskForLocation = (id) => {
 }
         
 // Generic template for one input from Yelp Api
-const fbYelpTemplate = (id, name, image_url, url, category, phone_number, rating, map_lat, map_long) => {
+const fbYelpTemplate = (id, name, image_url, url, category, phone_number, rating, map_lat, map_long, is_open_now) => {
         const body = JSON.stringify({
                 recipient: { id },
                 message: {
@@ -164,7 +167,7 @@ const fbYelpTemplate = (id, name, image_url, url, category, phone_number, rating
                                                         {
                                                         title: name,
                                                         image_url: image_url,
-                                                        subtitle: category + ". Rating:" + rating +"/5",
+                                                        subtitle: category + ". Rating:" + rating +"/5" + ". "+is_open_now,
                                                         buttons: 
                                                                 [
                                                                         {
@@ -370,6 +373,10 @@ var yelp = new Yelp({
   app_secret: 'BvupJdv1K4xdIKaX3vJJaejAuN9fECa5PpgIvyMJF4Lw3KfIioEKatlMf6mlDcWu'
 });
 
+// use different package for Biz search
+var YelpBiz = require('node-yelp-fusion');
+var yelpBiz = new YelpBiz({ id: "-ulP58VwFTAHGRhyxnZh_A", secret: 'BvupJdv1K4xdIKaX3vJJaejAuN9fECa5PpgIvyMJF4Lw3KfIioEKatlMf6mlDcWu'});
+
 // Intialize variables that we will save to global
 var responseCounter = 0; //Initialize the responseCounter
 var jsonString = '';
@@ -382,6 +389,86 @@ var jsonNumber = '';
 var jsonRating = '';
 var jsonMapLat = '';
 var jsonMapLong = '';
+var jsonId = '';
+var jsonIsOpenNow = '';
+
+// Create function to save yelp search output
+const saveYelpSearchOutput = (data) => {
+        jsonString = JSON.parse(data);
+        jsonBiz = jsonString.businesses;
+        jsonBiz = jsonString.businesses;
+        jsonName = [jsonBiz[0].name]; 
+        jsonUrl = [jsonBiz[0].url];
+        var i = 0;
+        do {
+                if (i == jsonBiz[0].categories.length) {
+                        jsonCat += jsonBiz[0].categories[i].title;      
+                } else if (i == 0) {
+                        jsonCat = [jsonBiz[0].categories[0].title];
+                } else {
+                        jsonCat += ", " + jsonBiz[0].categories[i].title;
+                }
+                i++;
+        } while (i<jsonBiz[0].categories.length);
+        jsonCat = [jsonCat];
+        jsonImage = [jsonBiz[0].image_url];
+        jsonNumber = [jsonBiz[0].phone];
+        jsonRating = [jsonBiz[0].rating];
+        jsonMapLat = [jsonBiz[0].coordinates.latitude];
+        jsonMapLong = [jsonBiz[0].coordinates.longitude];
+        jsonId = [jsonBiz[0].id];
+
+        // Store all results
+        i = 0;
+        if (i != jsonBiz.length-1) {
+                do {
+                        jsonName[i] = jsonBiz[i].name; 
+                        jsonUrl[i] = jsonBiz[i].url;
+                        var j = 0;
+                        do {
+                                if (j == jsonBiz[i].categories.length) {
+                                        jsonCat[i] += jsonBiz[i].categories[j].title;   
+                                } else if (j == 0) {
+                                        jsonCat[i] = jsonBiz[i].categories[0].title;
+                                } else {
+                                        jsonCat[i] += ", " + jsonBiz[i].categories[j].title;
+                                }
+                                j++;
+                        } while (j<jsonBiz[i].categories.length);
+                        jsonImage[i] = jsonBiz[i].image_url;
+                        if (jsonImage[i]) {
+                                jsonImage[i] = jsonImage[i].replace("ms.jpg","o.jpg");
+                        }
+                        jsonNumber[i] = jsonBiz[i].phone;
+                        jsonRating[i] = jsonBiz[i].rating;
+                        jsonMapLat[i] = jsonBiz[i].coordinates.latitude;
+                        jsonMapLong[i] = jsonBiz[i].coordinates.longitude;
+                        jsonId[i] = jsonBiz[i].id;
+                        i++;
+                } while (i < jsonBiz.length);
+        }
+        var resObj = [jsonName, jsonUrl, jsonCat, jsonImage, jsonNumber, jsonRating, jsonMapLat, jsonMapLong, jsonId];
+        return resObj;
+};
+
+// Create function to save yelp business output
+const saveYelpBusinessOutput = (data) => {
+        jsonString = data;
+        jsonBiz = jsonString.hours;
+        jsonIsOpenNow = jsonBiz[0].is_open_now; 
+        if (jsonIsOpenNow==true) {
+                jsonIsOpenNow = "Open now."
+        } else {
+                jsonIsOpenNow = "Closed."
+        }
+        var resObj = jsonIsOpenNow;
+        return resObj;
+};
+
+// Save some preference parameters
+var wantsOpen = false;
+var wantsHighRating = false;
+var wantsLowPrice = false;
 
 // ----------------------------------------------------------------------------
 
@@ -433,8 +520,8 @@ app.post('/webhook', (req, res) => {
                                                 if (attachments[0].type=="location") {
 
                                                         // Save lat and long
-                                                        let lat = attachments[0].payload.coordinates.lat;
-                                                        let long = attachments[0].payload.coordinates.long;
+                                                        lat = attachments[0].payload.coordinates.lat;
+                                                        long = attachments[0].payload.coordinates.long;
 
                                                         // Run lat and long through to yelp api
                                                         // See http://www.yelp.com/developers/documentation/v2/search_api
@@ -443,64 +530,16 @@ app.post('/webhook', (req, res) => {
                                                         // Followed by asking whether the user wants a different suggestion!
                                                         fbMessage(sender, "How about this?")
                                                         .then(function () {
-                                                                return yelp.search({term: 'food', latitude: lat, longitude: long, limit: 10})
+                                                                return yelp.search({term: 'food', latitude: lat, longitude: long, limit: 30})
                                                         })
                                                         .then(function (data) {
-                                                                jsonString = JSON.parse(data);
-                                                                jsonBiz = jsonString.businesses;
-                                                                jsonBiz = jsonString.businesses;
-                                                                jsonName = [jsonBiz[0].name]; 
-                                                                jsonUrl = [jsonBiz[0].url];
-                                                                var i = 0;
-                                                                do {
-                                                                        if (i == jsonBiz[0].categories.length) {
-                                                                                jsonCat += jsonBiz[0].categories[i].title;      
-                                                                        } else if (i == 0) {
-                                                                                jsonCat = [jsonBiz[0].categories[0].title];
-                                                                        } else {
-                                                                                jsonCat += ", " + jsonBiz[0].categories[i].title;
-                                                                        }
-                                                                        i++;
-                                                                } while (i<jsonBiz[0].categories.length);
-                                                                jsonCat = [jsonCat];
-                                                                console.log(jsonCat[0]);
-                                                                jsonImage = [jsonBiz[0].image_url];
-                                                                jsonNumber = [jsonBiz[0].phone];
-                                                                jsonRating = [jsonBiz[0].rating];
-                                                                jsonMapLat = [jsonBiz[0].coordinates.latitude];
-                                                                jsonMapLong = [jsonBiz[0].coordinates.longitude];
-
-                                                                // Store all results
-                                                                i = 0;
-                                                                if (i != jsonBiz.length-1) {
-                                                                        do {
-                                                                                jsonName[i] = jsonBiz[i].name; 
-                                                                                jsonUrl[i] = jsonBiz[i].url;
-                                                                                var j = 0;
-                                                                                do {
-                                                                                        if (j == jsonBiz[i].categories.length) {
-                                                                                                jsonCat[i] += jsonBiz[i].categories[j].title;   
-                                                                                        } else if (j == 0) {
-                                                                                                jsonCat[i] = jsonBiz[i].categories[0].title;
-                                                                                        } else {
-                                                                                                jsonCat[i] += ", " + jsonBiz[i].categories[j].title;
-                                                                                        }
-                                                                                        j++;
-                                                                                } while (j<jsonBiz[i].categories.length);
-                                                                                jsonImage[i] = jsonBiz[i].image_url;
-                                                                                if (jsonImage[i]) {
-                                                                                        jsonImage[i] = jsonImage[i].replace("ms.jpg","o.jpg");
-                                                                                }
-                                                                                jsonNumber[i] = jsonBiz[i].phone;
-                                                                                jsonRating[i] = jsonBiz[i].rating;
-                                                                                jsonMapLat[i] = jsonBiz[i].coordinates.latitude;
-                                                                                jsonMapLong[i] = jsonBiz[i].coordinates.longitude;
-                                                                                i++;
-                                                                        } while (i < jsonBiz.length);
-                                                                }
-                                                                console.log(jsonCat);
-                                                                var resObj = [jsonName, jsonUrl, jsonCat, jsonImage, jsonNumber, jsonRating, jsonMapLat, jsonMapLong];
-                                                                return resObj;
+                                                                saveYelpSearchOutput(data);
+                                                        })
+                                                        .then(function (data) {
+                                                                return yelpBiz.business(jsonId[responseCounter])
+                                                        })
+                                                        .then(function (data) {
+                                                                saveYelpBusinessOutput(data);
                                                         })
                                                         .then(function (data) {
                                                                 /*
@@ -521,11 +560,13 @@ app.post('/webhook', (req, res) => {
                                                                         jsonNumber[responseCounter],
                                                                         jsonRating[responseCounter],
                                                                         jsonMapLat[responseCounter],
-                                                                        jsonMapLong[responseCounter]
+                                                                        jsonMapLong[responseCounter],
+                                                                        jsonIsOpenNow
                                                                         );
                                                         })
                                                         .then(function (data) {
                                                                 if (data) {
+                                                                        console.log(jsonIsOpenNow);
                                                                         fbNextChoice(sender);
                                                                 }
                                                         })                                                        
