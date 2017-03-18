@@ -362,14 +362,12 @@ const wit = new Wit({
 // ----------------------------------------------------------------------------
 // Yelp API specific code
 
-// Request API access: http://www.yelp.com/developers/getting_started/api_access
-var Yelp = require('yelp');
-
+// new v3 API Codes
+var Yelp = require('yelp-api-v3');
+ 
 var yelp = new Yelp({
-        consumer_key: YELP_CONSUMER_KEY,
-        consumer_secret: YELP_CONSUMER_SECRET,
-        token: YELP_TOKEN,
-        token_secret: YELP_TOKEN_SECRET,
+  app_id: "-ulP58VwFTAHGRhyxnZh_A",
+  app_secret: 'BvupJdv1K4xdIKaX3vJJaejAuN9fECa5PpgIvyMJF4Lw3KfIioEKatlMf6mlDcWu'
 });
 
 // Intialize variables that we will save to global
@@ -445,29 +443,32 @@ app.post('/webhook', (req, res) => {
                                                         // Followed by asking whether the user wants a different suggestion!
                                                         fbMessage(sender, "How about this?")
                                                         .then(function () {
-                                                                return yelp.search({ term: 'food', ll: lat+","+long, limit: 10})
+                                                                return yelp.search({term: 'food', latitude: lat, longitude: long, limit: 10})
                                                         })
                                                         .then(function (data) {
-                                                                jsonString = JSON.stringify(data);
-                                                                jsonString = JSON.parse(jsonString);
+                                                                jsonString = JSON.parse(data);
+                                                                jsonBiz = jsonString.businesses;
                                                                 jsonBiz = jsonString.businesses;
                                                                 jsonName = [jsonBiz[0].name]; 
                                                                 jsonUrl = [jsonBiz[0].url];
-                                                                jsonCat = [''];
                                                                 var i = 0;
-                                                                if (i == jsonBiz[0].categories.length-1) {
-                                                                        jsonCat[0] = jsonBiz[0].categories[0][0];
-                                                                } else {
-                                                                        do {
-                                                                                jsonCat[0] += jsonBiz[0].categories[i][0] + ", ";
-                                                                                i++;
-                                                                        } while (i < jsonBiz[0].categories.length);
-                                                                }
+                                                                do {
+                                                                        if (i == jsonBiz[0].categories.length) {
+                                                                                jsonCat += jsonBiz[0].categories[i].title;      
+                                                                        } else if (i == 0) {
+                                                                                jsonCat = [jsonBiz[0].categories[0].title];
+                                                                        } else {
+                                                                                jsonCat += ", " + jsonBiz[0].categories[i].title;
+                                                                        }
+                                                                        i++;
+                                                                } while (i<jsonBiz[0].categories.length);
+                                                                jsonCat = [jsonCat];
+                                                                console.log(jsonCat[0]);
                                                                 jsonImage = [jsonBiz[0].image_url];
                                                                 jsonNumber = [jsonBiz[0].phone];
                                                                 jsonRating = [jsonBiz[0].rating];
-                                                                jsonMapLat = [jsonBiz[0].location.coordinate.latitude];
-                                                                jsonMapLong = [jsonBiz[0].location.coordinate.longitude];
+                                                                jsonMapLat = [jsonBiz[0].coordinates.latitude];
+                                                                jsonMapLong = [jsonBiz[0].coordinates.longitude];
 
                                                                 // Store all results
                                                                 i = 0;
@@ -475,31 +476,34 @@ app.post('/webhook', (req, res) => {
                                                                         do {
                                                                                 jsonName[i] = jsonBiz[i].name; 
                                                                                 jsonUrl[i] = jsonBiz[i].url;
-                                                                                jsonCat[i] = '';
                                                                                 var j = 0;
-                                                                                if (j == jsonBiz[i].categories.length-1) {
-                                                                                        jsonCat[i] = jsonBiz[i].categories[0][0];
-                                                                                } else {
-                                                                                        do {
-                                                                                                jsonCat[i] += jsonBiz[i].categories[j][0] + ", ";
-                                                                                                j++;
-                                                                                        } while (j < jsonBiz[i].categories.length);
-                                                                                }
+                                                                                do {
+                                                                                        if (j == jsonBiz[i].categories.length) {
+                                                                                                jsonCat[i] += jsonBiz[i].categories[j].title;   
+                                                                                        } else if (j == 0) {
+                                                                                                jsonCat[i] = jsonBiz[i].categories[0].title;
+                                                                                        } else {
+                                                                                                jsonCat[i] += ", " + jsonBiz[i].categories[j].title;
+                                                                                        }
+                                                                                        j++;
+                                                                                } while (j<jsonBiz[i].categories.length);
                                                                                 jsonImage[i] = jsonBiz[i].image_url;
                                                                                 if (jsonImage[i]) {
                                                                                         jsonImage[i] = jsonImage[i].replace("ms.jpg","o.jpg");
                                                                                 }
                                                                                 jsonNumber[i] = jsonBiz[i].phone;
                                                                                 jsonRating[i] = jsonBiz[i].rating;
-                                                                                jsonMapLat[i] = jsonBiz[i].location.coordinate.latitude;
-                                                                                jsonMapLong[i] = jsonBiz[i].location.coordinate.longitude;
+                                                                                jsonMapLat[i] = jsonBiz[i].coordinates.latitude;
+                                                                                jsonMapLong[i] = jsonBiz[i].coordinates.longitude;
                                                                                 i++;
                                                                         } while (i < jsonBiz.length);
                                                                 }
+                                                                console.log(jsonCat);
                                                                 var resObj = [jsonName, jsonUrl, jsonCat, jsonImage, jsonNumber, jsonRating, jsonMapLat, jsonMapLong];
                                                                 return resObj;
                                                         })
                                                         .then(function (data) {
+                                                                /*
                                                                 var i = responseCounter;
                                                                 while (!jsonName[i] || !jsonImage[i] || !jsonUrl[i] || !jsonCat[i] || !jsonNumber[i] || !jsonRating[i]
                                                                         || !jsonMapLat[i] || !jsonMapLong[i]) {
@@ -507,6 +511,7 @@ app.post('/webhook', (req, res) => {
                                                                         responseCounter = i;
                                                                         console.log(responseCounter);
                                                                 }
+                                                                */
                                                                 return fbYelpTemplate(
                                                                         sender,
                                                                         jsonName[responseCounter],
