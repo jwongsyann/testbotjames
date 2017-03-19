@@ -653,12 +653,15 @@ app.post('/webhook', (req, res) => {
                                                                         console.log(responseCounter);
                                                                 }
                                                                 if (responseCounter < jsonName.length && responseCounter != 0) {
-                                                                        yelpBiz.business(jsonId[responseCounter])
+                                                                        fbMessage(sender, "How about this?")
+                                                                        .then(function (data) {
+                                                                            return yelpBiz.business(jsonId[responseCounter])
+                                                                        })
                                                                         .then(function (data) {
                                                                             saveYelpBusinessOutput(data);
                                                                         })
                                                                         .then(function (data) {
-                                                                            fbYelpTemplate(
+                                                                            return fbYelpTemplate(
                                                                                 sender,
                                                                                 jsonName[responseCounter],
                                                                                 jsonImage[responseCounter],
@@ -672,7 +675,9 @@ app.post('/webhook', (req, res) => {
                                                                             )
                                                                         })
                                                                         .then(function (data) {
-                                                                                fbNextChoice(sender);
+                                                                                if (data) {
+                                                                                    fbNextChoice(sender);
+                                                                                }
                                                                         }).catch(function(err) {
                                                                                 console.error(err);
                                                                         });
