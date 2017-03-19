@@ -265,6 +265,86 @@ const fbWitMessage = (id, data) => {
         });
 };
 
+// General FB quick replies for other suggestions that includes a handler for wantsOpen, wantsLowPrice, wantsHighRating
+const fbNextChoicePref = (id, pref) => {
+        if (pref=="wantsOpen") {
+            var quick_replies = [
+                                        {
+                                        "content_type":"text",
+                                        "title":"Okay, show me.",
+                                        "payload":"nextChoice"
+                                        },
+                                        {
+                                        "content_type":"text",
+                                        "title":"Um.. it's closed...",
+                                        "payload":"endConv" 
+                                        },
+                                        {
+                                        "content_type":"text",
+                                        "title":"This is good! Thks!",
+                                        "payload":"endConv" 
+                                        }
+                                ];
+        } else if (pref=="wantsLowPrice") {
+            var quick_replies = [
+                                        {
+                                        "content_type":"text",
+                                        "title":"Okay, show me.",
+                                        "payload":"nextChoice"
+                                        },
+                                        {
+                                        "content_type":"text",
+                                        "title":"It's too expensive!",
+                                        "payload":"endConv" 
+                                        },
+                                        {
+                                        "content_type":"text",
+                                        "title":"This is good! Thks!",
+                                        "payload":"endConv" 
+                                        }
+                                ];
+        } else if (pref=="wantsHighRating") {
+            var quick_replies = [
+                                        {
+                                        "content_type":"text",
+                                        "title":"Okay, show me.",
+                                        "payload":"nextChoice"
+                                        },
+                                        {
+                                        "content_type":"text",
+                                        "title":"Kinda badly rated no?",
+                                        "payload":"endConv" 
+                                        },
+                                        {
+                                        "content_type":"text",
+                                        "title":"This is good! Thks!",
+                                        "payload":"endConv" 
+                                        }
+                                ];
+        } 
+
+        const body = JSON.stringify({
+                recipient: {id},
+                message: {
+                        text:"Or would you like a different suggestion?",
+                        quick_replies: quick_replies
+                }
+        });
+        const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
+        return fetch('https://graph.facebook.com/me/messages?' + qs, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body,
+        })
+        .then(rsp => rsp.json())
+        .then(json => {
+                if (json.error && json.error.message) {
+                        throw new Error(json.error.message);
+                }
+                return json;
+        });
+};
+
 // ----------------------------------------------------------------------------
 // Wit.ai bot specific code
 
@@ -609,7 +689,9 @@ app.post('/webhook', (req, res) => {
                                                                         );
                                                         })
                                                         .then(function (data) {
-                                                                if (data) {
+                                                                if (jsonIsOpenNow=="Closed.") {
+                                                                        fbNextChoicePref(sender,"wantsOpen");
+                                                                } else {
                                                                         fbNextChoice(sender);
                                                                 }
                                                         })                                                        
@@ -675,8 +757,10 @@ app.post('/webhook', (req, res) => {
                                                                             )
                                                                         })
                                                                         .then(function (data) {
-                                                                                if (data) {
-                                                                                    fbNextChoice(sender);
+                                                                                if (jsonIsOpenNow=="Closed.") {
+                                                                                        fbNextChoicePref(sender,"wantsOpen");
+                                                                                } else {
+                                                                                        fbNextChoice(sender);
                                                                                 }
                                                                         }).catch(function(err) {
                                                                                 console.error(err);
