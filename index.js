@@ -470,7 +470,7 @@ const actions = {
 		//insert codes for yelp search and fb template here
         //  return yelp.search({ term: cuisine, location: location, limit: 1})
         fbMessage (recipientId,"I know where to get good " +cuisine+" in "+location+"! Follow me!" )
-        .then(function () {
+        .then(function (data) {
                 return yelp.search({term: cuisine + 'food', location: location, limit: 30})
         })
         .then(function (data) {
@@ -615,15 +615,20 @@ const saveYelpSearchOutput = (data) => {
 
 // Create function to save yelp business output
 const saveYelpBusinessOutput = (data) => {
-        const jsonHours = data.hours;
-        console.log(jsonHours);
-        jsonIsOpenNow = jsonHours[0].is_open_now; 
-        if (jsonIsOpenNow==true) {
+        if (data.hours) {
+            const jsonHours = data.hours;
+            console.log(jsonHours);
+            jsonIsOpenNow = jsonHours[0].is_open_now; 
+            if (jsonIsOpenNow==true) {
                 jsonIsOpenNow = "Open now."
-        } else {
+            } else {
                 jsonIsOpenNow = "Closed."
+            }
+            var resObj = jsonIsOpenNow;    
+        } else {
+            var resObj = "Unknown status";
         }
-        var resObj = jsonIsOpenNow;
+
         return resObj;
 };
 
