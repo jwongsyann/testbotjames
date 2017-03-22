@@ -466,12 +466,12 @@ const actions = {
 	
 	const search = (location, cuisine, recipientId) =>{	
 		console.log("Searching yelp");
-		
+
 		//insert codes for yelp search and fb template here
-      //  return yelp.search({ term: cuisine, location: location, limit: 1})
-       fbMessage (recipientId,"I know where to get good " +cuisine+" in "+location+"! Follow me!" )
+        //  return yelp.search({ term: cuisine, location: location, limit: 1})
+        fbMessage (recipientId,"I know where to get good " +cuisine+" in "+location+"! Follow me!" )
         .then(function () {
-                return yelp.search({term: cuisine, location: location, limit: 30})
+                return yelp.search({term: cuisine + 'food', location: location, limit: 30})
         })
         .then(function (data) {
                 saveYelpSearchOutput(data);
@@ -580,10 +580,9 @@ const saveYelpSearchOutput = (data) => {
         jsonMapLat = [jsonBiz[0].coordinates.latitude];
         jsonMapLong = [jsonBiz[0].coordinates.longitude];
         jsonId = [jsonBiz[0].id];
-
         // Store all results
         i = 0;
-        if (i != jsonBiz.length-1) {
+        if (jsonBiz.length > 0) {
                 do {
                         jsonName[i] = jsonBiz[i].name; 
                         jsonUrl[i] = jsonBiz[i].url;
@@ -616,9 +615,9 @@ const saveYelpSearchOutput = (data) => {
 
 // Create function to save yelp business output
 const saveYelpBusinessOutput = (data) => {
-        jsonString = data;
-        jsonBiz = jsonString.hours;
-        jsonIsOpenNow = jsonBiz[0].is_open_now; 
+        const jsonHours = data.hours;
+        console.log(jsonHours);
+        jsonIsOpenNow = jsonHours[0].is_open_now; 
         if (jsonIsOpenNow==true) {
                 jsonIsOpenNow = "Open now."
         } else {
