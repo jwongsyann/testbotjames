@@ -422,62 +422,101 @@ const actions = {
         },
         // You should implement your custom actions here
         // See https://wit.ai/docs/quickstart
-		greetings({context, entities}) {
+		greetings({sessionId}) {
+			return new Promise(function(resolve, reject) {
+		const recipientId = sessions[sessionId].fbid;
+			console.log('greetings function called');  
+			 fbGoMessage(recipientId);
+		     });
 		        },
+	
+				getFood({context, entities, sessionId}) {
+		                return new Promise(function(resolve, reject) {
+							const recipientId = sessions[sessionId].fbid;
+							console.log('Initiating getFood function...');
+					
+							//define search parameters
+							var location = firstEntityValue(entities, "location") || context.location
+							var cuisine = firstEntityValue(entities, "cuisine") || context.cuisine
 				
-		getForecast({context, entities}) {
-                return new Promise(function(resolve, reject) {
-                        var location = firstEntityValue(entities, "location");
-                        if (location) {
-                                context.forecast = 'sunny in ' + location; // we should call a weather API here
-                                delete context.missingLocation;
-                        } else {
-                                context.missingLocation = true;
-                                delete context.forecast;
-                        }
-                        return resolve(context);
-                });
-        },
-      
-		getLocation({context, entities}) {
-			return new Promise(function(resolve, reject) {        
-				const fbAskForLocation = (id) => {
-				        const body = JSON.stringify({
-				                recipient: { id },
-				                message: {
-				                        text:"Please share your current location or the drop the pin in the region of where you would like to eat.",
-				                        quick_replies: 
-				                                [
-				                                        {
-				                                        "content_type":"location"
-				                                        }
-				                                ]
-				                }
-				        });
-
-				        const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
-				        fetch('https://graph.facebook.com/me/messages?' + qs, {
-				                method: 'POST',
-				                headers: {'Content-Type': 'application/json'},
-				                body,
-				        })
-				        .then(rsp => rsp.json())
-				        .then(json => {
-				                if (json.error && json.error.message) {
-				                throw new Error(json.error.message);
-				                }
-				                return json;
-				        });
-				}
-		  return resolve(context);
-        
-                 });}
-			
-			,
-
-
-		
+	
+								if(cuisine!=null){
+									 context.cuisine= cuisine;
+									 delete context.getCuisine;
+								 		}else{
+								 	context.getCuisine =true;
+								 		}			
+								if(location!=null){
+									 context.location= location;
+									 delete context.getCuisine;
+											}else{
+									context.missinglocation=true;
+											}
+					   		if (location && cuisine){
+					   			context.recommend = search(location, cuisine, recipientId);
+					   			console.log('Recommending...');
+					   			 return context = {};
+					   						}
+						                        	
+		                        return resolve(context);
+		                });
+		        }
 	}; //must keep this 
+	
+	
+	const search = (location, cuisine, recipientId) =>{	
+		console.log("Searching yelp");
+		
+		//insert codes for yelp search and fb template here
+      //  return yelp.search({ term: cuisine, location: location, limit: 1})
+       fbMessage (recipientId,"I know where to get good " +cuisine+" in "+location+"! Follow me!" )
+        .then(function () {
+                return yelp.search({term: cuisine, location: location, limit: 30})
+        })
+        .then(function (data) {
+                saveYelpSearchOutput(data);
+        })
+        .then(function (data) {
+                return yelpBiz.business(jsonId[responseCounter])
+        })
+        .then(function (data) {
+                saveYelpBusinessOutput(data);
+        })
+        .then(function (data) {
+                /*
+                var i = responseCounter;
+                while (!jsonName[i] || !jsonImage[i] || !jsonUrl[i] || !jsonCat[i] || !jsonNumber[i] || !jsonRating[i]
+                        || !jsonMapLat[i] || !jsonMapLong[i]) {
+                        i++;
+                        responseCounter = i;
+                        console.log(responseCounter);
+                }
+                */
+                return fbYelpTemplate(
+                        recipientId,
+                        jsonName[responseCounter],
+                        jsonImage[responseCounter],
+                        jsonUrl[responseCounter],
+                        jsonCat[responseCounter],
+                        jsonNumber[responseCounter],
+                        jsonRating[responseCounter],
+                        jsonMapLat[responseCounter],
+                        jsonMapLong[responseCounter],
+                        jsonIsOpenNow
+                        );
+        })
+        .then(function (data) {
+                if (jsonIsOpenNow=="Closed.") {
+                        fbNextChoicePref(recipientId,"wantsOpen");
+                } else {
+                        fbNextChoice(recipientId);
+                }
+        })                                                        
+        .catch(function (err) {
+                console.error(err);
+        });
+        
+	};
 
 // Setting up our bot
 const wit = new Wit({
