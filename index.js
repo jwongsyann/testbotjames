@@ -423,6 +423,12 @@ const actions = {
         // You should implement your custom actions here
         // See https://wit.ai/docs/quickstart
 		greetings({context, entities}) {
+			return new Promise(function(resolve, reject) {
+		const recipientId = sessions[sessionId].fbid;
+			console.log('greetings function called');  
+			 // we should call a weather API here
+			 fbGoMessage(recipientId);
+		     });
 		        },
 				
 		getForecast({context, entities}) {
