@@ -55,6 +55,12 @@ if (!YELP_TOKEN) { throw new Error('missing YELP_TOKEN') }
 const YELP_TOKEN_SECRET = process.env.YELP_TOKEN_SECRET;
 if (!YELP_TOKEN_SECRET) { throw new Error('missing YELP_TOKEN_SECRET') }
 
+// Yelp V3 API parameters
+const YELP_ID = process.env.YELP_ID;
+if (!YELP_ID) { throw new Error('missing YELP_ID') }
+const YELP_SECRET = process.env.YELP_SECRET;
+if (!YELP_SECRET) { throw new Error('missing YELP_SECRET') }
+
 // ----------------------------------------------------------------------------
 // Messenger API specific code
 
@@ -532,13 +538,13 @@ const wit = new Wit({
 var Yelp = require('yelp-api-v3');
  
 var yelp = new Yelp({
-  app_id: "-ulP58VwFTAHGRhyxnZh_A",
-  app_secret: 'BvupJdv1K4xdIKaX3vJJaejAuN9fECa5PpgIvyMJF4Lw3KfIioEKatlMf6mlDcWu'
+  app_id: YELP_ID,
+  app_secret: YELP_SECRET
 });
 
 // use different package for Biz search
 var YelpBiz = require('node-yelp-fusion');
-var yelpBiz = new YelpBiz({ id: "-ulP58VwFTAHGRhyxnZh_A", secret: 'BvupJdv1K4xdIKaX3vJJaejAuN9fECa5PpgIvyMJF4Lw3KfIioEKatlMf6mlDcWu'});
+var yelpBiz = new YelpBiz({ id: YELP_ID, secret: YELP_SECRET});
 
 // Intialize variables that we will save to global
 var responseCounter = 0; //Initialize the responseCounter
