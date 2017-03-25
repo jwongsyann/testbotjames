@@ -841,7 +841,7 @@ app.post('/webhook', (req, res) => {
                             } else if (text=="Um.. it's closed...") {
                                     wantsOpen = true;
                                     responseCounter = 0;
-                                    message = "Haha right. Here are some open ones.";
+                                    const message = "Haha right. Here are some open ones.";
                                     recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,null);
                             } else if (text=="It's too expensive!") {
                                     wantsLowPrice = true;
@@ -850,13 +850,13 @@ app.post('/webhook', (req, res) => {
                                         fbMessage(sender,"Hmm, these are already the cheapest restaurants I have for you. Maybe I should start the search again?")
                                     } else {
                                         priceRange = updatePriceRange(priceCeiling-1);   
-                                        message = "Hmm, here are some cheaper alternatives.";
+                                        const message = "Hmm, here are some cheaper alternatives.";
                                         recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,null);
                                     }
                             } else if (text=="Kinda badly rated no?") {
                                     wantsHighRating = true;
                                     responseCounter = 0;
-                                    message = "Hmm, I change rank them from best rated to worst rated. Here goes";
+                                    const message = "Hmm, I change rank them from best rated to worst rated. Here goes";
                                     recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,null);
                             } else if (text=="This is good! Thks!") {
                                     // This part is to end off the conversation.
