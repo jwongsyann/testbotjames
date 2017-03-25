@@ -475,7 +475,7 @@ const actions = {
 		//insert codes for yelp search and fb template here
         //  return yelp.search({ term: cuisine, location: location, limit: 1})
         const message = "I know where to get good " +cuisine+" in "+location+"! Follow me!";
-        recommendChunk(message,null,null,location,wantsOpen,priceRange, cuisine, null);
+        recommendChunk(sender, message,null,null,location,wantsOpen,priceRange, cuisine, null);
     };
 
 // Setting up our bot
@@ -821,7 +821,7 @@ app.post('/webhook', (req, res) => {
 
                                 // Run lat and long through to yelp api
                                 const message = "How about this?"
-                                recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null);
+                                recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,null);
                                                         
                             } else {
 
@@ -843,7 +843,7 @@ app.post('/webhook', (req, res) => {
                                     wantsOpen = true;
                                     responseCounter = 0;
                                     message = "Haha right. Here are some open ones.";
-                                    recommendChunk(message,lat,long,null,wantsOpen,priceRange,null);
+                                    recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,null);
                             } else if (text=="It's too expensive!") {
                                     wantsLowPrice = true;
                                     responseCounter = 0;
@@ -852,13 +852,13 @@ app.post('/webhook', (req, res) => {
                                     } else {
                                         priceRange = updatePriceRange(priceCeiling-1);   
                                         message = "Hmm, here are some cheaper alternatives.";
-                                        recommendChunk(message,lat,long,null,wantsOpen,priceRange,null);
+                                        recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,null);
                                     }
                             } else if (text=="Kinda badly rated no?") {
                                     wantsHighRating = true;
                                     responseCounter = 0;
                                     message = "Hmm, I change rank them from best rated to worst rated. Here goes";
-                                    recommendChunk(message,lat,long,null,wantsOpen,priceRange,null);
+                                    recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,null);
                             } else if (text=="This is good! Thks!") {
                                     // This part is to end off the conversation.
                                     fbMessage(sender, "No problemo! Just share your location again in the future to restart this conversation! Alternatively, you could just type Hi :). A smiley face is also preferred.");
