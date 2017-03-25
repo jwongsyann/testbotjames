@@ -24,8 +24,8 @@ let Wit = null;
 let log = null;
 try {
         // if running from repo
-        Wit = require('../').Wit;
-        log = require('../').log;
+        Wit = require('../lib/').Wit;
+        log = require('../lib/').log;
     } catch (e) {
         Wit = require('node-wit').Wit;
         log = require('node-wit').log;
@@ -475,7 +475,7 @@ const actions = {
 		//insert codes for yelp search and fb template here
         //  return yelp.search({ term: cuisine, location: location, limit: 1})
         const message = "I know where to get good " +cuisine+" in "+location+"! Follow me!";
-        recommendChunk(sender, message,null,null,location,wantsOpen,priceRange, cuisine, null);
+        recommendChunk(recipientId, message,null,null,location,wantsOpen,priceRange, cuisine, null);
     };
 
 // Setting up our bot
@@ -702,28 +702,25 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,c
     });
 }
 
-const nextRecommendChunk = (sender, responseCounter) => {
+const nextRecommendChunk = (sender) => {
     // This part is to respond to the user's request for other recommendations!
     if (responseCounter >= jsonName.length) {
         fbMessage(sender, "That's all I have! Shall I go back to the first recommendation?");
         responseCounter = 0;
     } else {
         var i = responseCounter;
-        console.log("i is now:"+i);
         i++;
         responseCounter = i;
-        console.log("i is then:"+i);
         while (!jsonName[i] || !jsonImage[i] || !jsonUrl[i] || !jsonCat[i] || !jsonNumber[i] || !jsonRating[i]
             || !jsonMapLat[i] || !jsonMapLong[i]) {
             i++;
-        if (responseCounter >= jsonName.length) {
-            fbMessage(sender, "That's all I have! Shall I go back to the first recommendation?");
-            responseCounter = 0;
-            break;
-        } else {
-            responseCounter = i;
-        }
-        console.log(responseCounter);
+            if (responseCounter >= jsonName.length) {
+                fbMessage(sender, "That's all I have! Shall I go back to the first recommendation?");
+                responseCounter = 0;
+                break;
+            } else {
+                responseCounter = i;
+            }
         }
         if (responseCounter < jsonName.length && responseCounter != 0) {
             fbMessage(sender, "How about this?")
@@ -837,7 +834,7 @@ app.post('/webhook', (req, res) => {
                                     // This part is for the beginning conversation!
                                     fbAskForLocation(sender);
                             } else if (text=="Okay, show me.") {
-                                    nextRecommendChunk(sender, responseCounter);
+                                    nextRecommendChunk(sender);
                             } else if (text=="Um.. it's closed...") {
                                     wantsOpen = true;
                                     responseCounter = 0;
@@ -889,6 +886,7 @@ app.post('/webhook', (req, res) => {
                                         console.error('Oops! Got an error from Wit: ', err.stack || err);
                                     })                                                
                             }
+                        }
                     } else if (event.postback) {
                         // This is to handle postbacks from cards
                         const sender = event.sender.id;
@@ -912,7 +910,6 @@ app.post('/webhook', (req, res) => {
                         }
                     } else {
                         console.log('received event', JSON.stringify(event));
-                    }
                     }
                 })
             })
