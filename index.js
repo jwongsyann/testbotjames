@@ -24,8 +24,8 @@ let Wit = null;
 let log = null;
 try {
         // if running from repo
-        Wit = require('../').Wit;
-        log = require('../').log;
+        Wit = require('../lib/wit').Wit;
+        log = require('../lib/log').log;
 } catch (e) {
         Wit = require('node-wit').Wit;
         log = require('node-wit').log;
@@ -64,6 +64,27 @@ if (!YELP_TOKEN_SECRET) { throw new Error('missing YELP_TOKEN_SECRET') }
 // Save latitude and longitude to global for reuse for yelp api call
 var lat = '';
 var long = '';
+
+//send typing function
+const typing = (id) => {
+    const body = JSON.stringify({
+        recipient: { id },
+        sender_action:"typing_on",
+    });
+const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
+    return fetch('https://graph.facebook.com/me/messages?' + qs, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body,
+    })
+    .then(rsp => rsp.json())
+    .then(json => {
+        if (json.error && json.error.message) {
+            throw new Error(json.error.message);
+        }
+        return json;
+    });
+};
 
 // Generic function to send any message
 const fbMessage = (id, text) => {
@@ -453,7 +474,9 @@ const actions = {
 									context.missinglocation=true;
 											}
 					   		if (location && cuisine){
-					   			context.recommend = search(location, cuisine, recipientId);
+					   			
+                                context.recommend = search(location, cuisine, recipientId);
+
 					   			console.log('Recommending...');
 					   			 return context = {};
 					   						}
@@ -469,7 +492,8 @@ const actions = {
 
 		//insert codes for yelp search and fb template here
         //  return yelp.search({ term: cuisine, location: location, limit: 1})
-        fbMessage (recipientId,"I know where to get good " +cuisine+" in "+location+"! Follow me!" )
+        typing (recipientId)
+        .then(fbMessage (recipientId,"I know where to get good " +cuisine+" in "+location+"! Follow me!" ))
         .then(function (data) {
                 return yelp.search({term: cuisine + 'food', location: location, limit: 30})
         })
