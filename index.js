@@ -562,7 +562,11 @@ const saveYelpSearchOutput = (data) => {
     jsonMapLat = [jsonBiz[0].coordinates.latitude];
     jsonMapLong = [jsonBiz[0].coordinates.longitude];
     jsonId = [jsonBiz[0].id];
-    jsonPrice = [jsonBiz[0].price.length];
+    if (jsonBiz[0].price) {
+        jsonPrice = [jsonBiz[0].price.length];   
+    } else {
+        jsonPrice = [""];
+    }
     // Store all results
     i = 0;
     if (jsonBiz.length > 0) {
@@ -666,19 +670,22 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,c
         cuisine = "";
     }
     sortBy = updateSortBy(sortBy);
-    fbMessage(sender, message)
+    typing(sender)
+    .then(function(data) {
+        fbMessage(sender, message);
+    })
     .then(function (data) {
         if (lat&long) {
-                return yelp.search({term: cuisine+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, limit: 30})   
+                return yelp.search({term: cuisine+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, limit: 30});
         } else if (location) {
-                return yelp.search({term: cuisine+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy,limit: 30})
+                return yelp.search({term: cuisine+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy,limit: 30});
         }
     })
     .then(function (data) {
         saveYelpSearchOutput(data);
     })
     .then(function (data) {
-        return yelpBiz.business(jsonId[responseCounter])
+        return yelpBiz.business(jsonId[responseCounter]);
     })
     .then(function (data) {
         saveYelpBusinessOutput(data);
@@ -744,7 +751,10 @@ const nextRecommendChunk = (sender) => {
             }
         }
         if (responseCounter < jsonName.length && responseCounter != 0) {
-            fbMessage(sender, "How about this?")
+            typing(sender)
+            .then(function(data){
+                fbMessage(sender, "How about this?");
+            })
             .then(function (data) {
                 return yelpBiz.business(jsonId[responseCounter])
             })
