@@ -836,9 +836,8 @@ app.post('/webhook', (req, res) => {
                             if (text=="Let's go!" || text=="I'm hungry!") {
                                     // This part is for the beginning conversation!
                                     fbAskForLocation(sender);
-                                } else if (text=="Okay, show me.") {
+                            } else if (text=="Okay, show me.") {
                                     nextRecommendChunk(sender, responseCounter);
-                                }
                             } else if (text=="Um.. it's closed...") {
                                     wantsOpen = true;
                                     responseCounter = 0;
@@ -870,7 +869,8 @@ app.post('/webhook', (req, res) => {
                                             sessionId, // the user's current session
                                             text, // the user's message
                                             sessions[sessionId].context // the user's current session state
-                                    ).then((context) => {
+                                    )
+                                    .then((context) => {
                                         // Our bot did everything it has to do.
                                         // Now it's waiting for further messages to proceed.
                                         console.log('Waiting for next user messages');
@@ -913,11 +913,13 @@ app.post('/webhook', (req, res) => {
                     } else {
                         console.log('received event', JSON.stringify(event));
                     }
-                });
-            });
-        };
-        res.sendStatus(200);
-});
+                    }
+                })
+            })
+        }
+    res.sendStatus(200);
+})
+
 
 /*
 * Verify that the callback came from Facebook. Using the App Secret from
