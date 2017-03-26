@@ -39,8 +39,6 @@ const FB_APP_SECRET = process.env.FB_APP_SECRET;
 if (!FB_APP_SECRET) { throw new Error('missing FB_APP_SECRET') }
 const FB_VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN;
 if (!FB_VERIFY_TOKEN) { throw new Error('missing FB_VERIFY_TOKEN') }
-const FB_APP_ID = process.env.FB_APP_ID;
-if (!FB_APP_ID) { throw new Error('missing FB_APP_ID') }
 
 // Yelp API parameters
 const YELP_CONSUMER_KEY = process.env.YELP_CONSUMER_KEY;
