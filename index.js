@@ -362,6 +362,36 @@ const fbNextChoicePref = (id, pref) => {
     });
 };
 
+// General FB quick replies for other suggestions.
+const fbRestartRecommend = (id) => {
+    const body = JSON.stringify({
+        recipient: {id},
+        message: {
+            quick_replies: 
+            [
+            {
+                "content_type":"text",
+                "title":"Okay.",
+                "payload":"restartRecommend"
+            }
+            ]
+        }
+    });
+    const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
+    return fetch('https://graph.facebook.com/me/messages?' + qs, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body,
+    })
+    .then(rsp => rsp.json())
+    .then(json => {
+        if (json.error && json.error.message) {
+            throw new Error(json.error.message);
+        }
+        return json;
+    });
+};
+
 // ----------------------------------------------------------------------------
 // Wit.ai bot specific code
 // ----------------------------------------------------------------------------
@@ -635,7 +665,7 @@ const updatePriceRange = (data) => {
 }
 
 const updateSortBy = (data) => {
-    const res = "";
+    var res = "";
     if (data) {
         res = "rating";
     } else {
@@ -720,7 +750,10 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,c
 const nextRecommendChunk = (sender) => {
     // This part is to respond to the user's request for other recommendations!
     if (responseCounter >= jsonName.length) {
-        fbMessage(sender, "That's all I have! Shall I go back to the first recommendation?");
+        fbMessage(sender, "That's all I have! Shall I go back to the first recommendation?")
+        .then(function(data){
+            fbRestartRecommend(sender);
+        });
         responseCounter = 0;
     } else {
         var i = responseCounter;
@@ -730,9 +763,10 @@ const nextRecommendChunk = (sender) => {
             || !jsonMapLat[i] || !jsonMapLong[i]) {
             i++;
             if (responseCounter >= jsonName.length) {
-                fbMessage(sender, "That's all I have! Shall I go back to the first recommendation?");
-                // Missing a method here to go back to the first recommendation.
-
+                fbMessage(sender, "That's all I have! Shall I go back to the first recommendation?")
+                .then(function(data){
+                    fbRestartRecommend(sender);
+                });
                 responseCounter = 0;
                 break;
             } else {
@@ -863,8 +897,10 @@ app.post('/webhook', (req, res) => {
                                     wantsLowPrice = true;
                                     responseCounter = 0;
                                     if (priceCeiling==1) {
-                                        fbMessage(sender,"Hmm, these are already the cheapest restaurants I have for you. Maybe I should start the search again?");
-                                        // Missing method to start search again
+                                        fbMessage(sender,"Hmm, these are already the cheapest restaurants I have for you. Maybe I should start the search again?")
+                                        .then(function(data){
+                                            fbRestartRecommend(sender);
+                                        });
                                     } else {
                                         priceRange = updatePriceRange(priceCeiling-1);   
                                         const message = "Hmm, here are some cheaper alternatives.";
