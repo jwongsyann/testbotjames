@@ -39,6 +39,8 @@ const FB_APP_SECRET = process.env.FB_APP_SECRET;
 if (!FB_APP_SECRET) { throw new Error('missing FB_APP_SECRET') }
 const FB_VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN;
 if (!FB_VERIFY_TOKEN) { throw new Error('missing FB_VERIFY_TOKEN') }
+const FB_APP_ID = process.env.FB_APP_ID;
+if (!FB_APP_ID) { throw new Error('missing FB_APP_ID') }
 
 // Yelp API parameters
 const YELP_CONSUMER_KEY = process.env.YELP_CONSUMER_KEY;
@@ -59,9 +61,18 @@ if (!YELP_SECRET) { throw new Error('missing YELP_SECRET') }
 // ----------------------------------------------------------------------------
 // Facebook Messenger API specific code
 // ----------------------------------------------------------------------------
-// Save latitude and longitude to global for reuse for yelp api call
-var lat = '';
-var long = '';
+// Function to get user's first name.
+const requestUserName = (id) => {
+  const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
+  return fetch('https://graph.facebook.com/v2.8/' + encodeURIComponent(id) +'?' + qs)
+  .then(rsp => rsp.json())
+  .then(json => {
+    if (json.error && json.error.message) {
+      throw new Error(json.error.message);
+    }
+    return json.first_name;
+  });
+};
 
 //send typing function
 const typing = (id) => {
@@ -392,6 +403,10 @@ const fbRestartRecommend = (id) => {
     });
 };
 
+// Save latitude and longitude to global for reuse for yelp api call
+var lat = '';
+var long = '';
+
 // ----------------------------------------------------------------------------
 // Wit.ai bot specific code
 // ----------------------------------------------------------------------------
@@ -468,6 +483,18 @@ const actions = {
 
     // You should implement your custom actions here
     // See https://wit.ai/docs/quickstart
+    getName({sessionId, context, entities}) {
+        return new Promise(function(resolve,reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log(recipientId);
+            requestUserName(recipientId)
+            .then(function(data){
+                context.name = data;
+            })
+            return resolve(context);
+        })
+    },
+
     greetings({sessionId}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
@@ -957,8 +984,11 @@ app.post('/webhook', (req, res) => {
 
                         // Check if payload is a new conversation and start new conversation thread
                         if (text=='"startConvo"') {
-                            fbMessage(sender,"Name's James. I give you the best places to eat. At any point of time, if you would like to get a new suggestion from me on places to eat, just share your location or the location around which you would like to get suggestions from!")
-                            .then(function(){
+                            requestUserName(sender)
+                            .then(function(data){
+                                fbMessage(sender,"Hi "+data+"!"+" Name's James. I give you the best places to eat. At any point of time, if you would like to get a new suggestion from me on places to eat, just share your location or the location around which you would like to get suggestions from!");
+                            })
+                            .then(function(data){
                                 fbGoMessage(sender);
                             })
                             .catch(function(err){
