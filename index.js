@@ -95,24 +95,6 @@ const typing = (id) => {
     });
 };
 
-//Get user name
-const user_name = (id,data) => {
-	    const body = JSON.stringify({
-			        recipient: { id },
-					 });
-	const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
-	return fetch ('https://graph.facebook.com/v2.6/<USER_ID>?fields=first_name&' + qs, {
-		method:'GET',})
-	    .then(rsp => rsp.json())
-	    .then(json => {
-	        if (json.error && json.error.message) {
-	            throw new Error(json.error.message);
-	        }
-	        return json;
-			var username =json.first_name;
-	    });
-	};
-
 // Generic function to send any message
 const fbMessage = (id, text) => {
     const body = JSON.stringify({
