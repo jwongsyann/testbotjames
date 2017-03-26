@@ -1004,7 +1004,7 @@ app.post('/webhook', (req, res) => {
                         if (text=='"startConvo"') {
                             requestUserName(sender)
                             .then(function(data){
-                                fbMessage(sender,"Hi, my name is James, but my friends call me foodie-James! I LOVE food and I love sharing good food places with people! Tell me where you are (and what you feel like eating), so I can give you some food recommendations!");
+                                fbMessage(sender,"Hi "+ data + ", my name is James, but my friends call me foodie-James! I LOVE food and I love sharing good food places with people! Tell me where you are (and what you feel like eating), so I can give you some food recommendations!");
                             })
                             .then(function(data){
                                 fbGoMessage(sender);
