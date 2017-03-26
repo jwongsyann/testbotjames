@@ -1,36 +1,31 @@
 'use strict';
 
-// Messenger API integration example
-// We assume you have:
-// * a Wit.ai bot setup (https://wit.ai/docs/quickstart)
-// * a Messenger Platform setup (https://developers.facebook.com/docs/messenger-platform/quickstart)
-// You need to `npm install` the following dependencies: body-parser, express, request.
-//
-// 1. npm install body-parser express request
-// 2. Download and install ngrok from https://ngrok.com/download
-// 3. ./ngrok http 8445
-// 4. WIT_TOKEN=your_access_token FB_APP_SECRET=your_app_secret FB_PAGE_TOKEN=your_page_token node examples/messenger.js
-// 5. Subscribe your page to the Webhooks using verify_token and `https://<your_ngrok_io>/webhook` as callback URL.
-// 6. Talk to your bot on Messenger!
-
+// ----------------------------------------------------------------------------
+// Load required packages
+// ----------------------------------------------------------------------------
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const express = require('express');
 const fetch = require('node-fetch');
 const request = require('request');
 const async = require('async');
+const Yelp = require('yelp-api-v3');
+const YelpBiz = require('node-yelp-fusion');
 
 let Wit = null;
 let log = null;
 try {
-        // if running from repo
-        Wit = require('../lib/').Wit;
-        log = require('../lib/').log;
-    } catch (e) {
-        Wit = require('node-wit').Wit;
-        log = require('node-wit').log;
-    }
+    // if running from repo
+    Wit = require('../lib/').Wit;
+    log = require('../lib/').log;
+} catch (e) {
+    Wit = require('node-wit').Wit;
+    log = require('node-wit').log;
+}
 
+// ----------------------------------------------------------------------------
+// Setup required parameters
+// ----------------------------------------------------------------------------
 // Webserver parameter
 const PORT = process.env.PORT || 8445;
 
@@ -62,11 +57,8 @@ const YELP_SECRET = process.env.YELP_SECRET;
 if (!YELP_SECRET) { throw new Error('missing YELP_SECRET') }
 
 // ----------------------------------------------------------------------------
-// Messenger API specific code
-
-// See the Send API reference
-// https://developers.facebook.com/docs/messenger-platform/send-api-reference
-
+// Facebook Messenger API specific code
+// ----------------------------------------------------------------------------
 // Save latitude and longitude to global for reuse for yelp api call
 var lat = '';
 var long = '';
@@ -77,7 +69,7 @@ const typing = (id) => {
         recipient: { id },
         sender_action:"typing_on",
     });
-const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
+    const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
     return fetch('https://graph.facebook.com/me/messages?' + qs, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -219,7 +211,6 @@ const fbYelpTemplate = (id, name, image_url, url, category, phone_number, rating
             }
         },
     });
-
     const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
     return fetch('https://graph.facebook.com/me/messages?' + qs, {
         method: 'POST',
@@ -349,7 +340,6 @@ const fbNextChoicePref = (id, pref) => {
         }
         ];
     } 
-
     const body = JSON.stringify({
         recipient: {id},
         message: {
@@ -374,7 +364,7 @@ const fbNextChoicePref = (id, pref) => {
 
 // ----------------------------------------------------------------------------
 // Wit.ai bot specific code
-
+// ----------------------------------------------------------------------------
 // This will contain all user sessions.
 // Each session has an entry:
 // sessionId -> {fbid: facebookUserId, context: sessionState}
@@ -382,22 +372,22 @@ const sessions = {};
 
 const findOrCreateSession = (fbid) => {
     let sessionId;
-        // Let's see if we already have a session for the user fbid
-        Object.keys(sessions).forEach(k => {
-            if (sessions[k].fbid === fbid) {
-                // Yep, got it!
-                sessionId = k;
-            }
-        });
-        if (!sessionId) {
-                // No session found for user fbid, let's create a new one
-                sessionId = new Date().toISOString();
-                sessions[sessionId] = {fbid: fbid, context: {}};
-            }
-            return sessionId;
-        };
+    // Let's see if we already have a session for the user fbid
+    Object.keys(sessions).forEach(k => {
+        if (sessions[k].fbid === fbid) {
+            // Yep, got it!
+            sessionId = k;
+        }
+    });
+    if (!sessionId) {
+        // No session found for user fbid, let's create a new one
+        sessionId = new Date().toISOString();
+        sessions[sessionId] = {fbid: fbid, context: {}};
+    }
+    return sessionId;
+};
 
-// Define function required in getForecast
+// User Defined function required to extract values from context
 const firstEntityValue = (entities, entity) => {
     const val = entities && entities[entity] &&
     Array.isArray(entities[entity]) &&
@@ -409,52 +399,51 @@ const firstEntityValue = (entities, entity) => {
     return typeof val === 'object' ? val.value : val;
 };
 
-
-
 // Our bot actions
 const actions = {
     send({sessionId}, response) {
-            // Our bot has something to say!
-            // Let's retrieve the Facebook user whose session belongs to
-            const recipientId = sessions[sessionId].fbid;
-            if (recipientId) {
-                    // Yay, we found our recipient!
-                    // Let's forward our bot response to her.
-                    // We return a promise to let our bot know when we're done sending
+        // Our bot has something to say!
+        // Let's retrieve the Facebook user whose session belongs to
+        const recipientId = sessions[sessionId].fbid;
+        if (recipientId) {
+            // Yay, we found our recipient!
+            // Let's forward our bot response to her.
+            // We return a promise to let our bot know when we're done sending
 
-                    // This part of the code is adapted for quick replies
-                    if (response.quickreplies) {
-                    	response.quick_replies=[]; // Renamed quick reply object from Wit
-                    	for (var i = 0, len = response.quickreplies.length; i < len; i++) { // Loop through quickreplies
-                            response.quick_replies.push({ title: response.quickreplies[i], content_type: 'text', payload: 'CUSTOM_WIT_AI_QUICKREPLY_ID' + i });
-                        }
-                        delete response.quickreplies;
-                    }
-
-                    return fbWitMessage(recipientId, response)
-                    .then(() => null)
-                    .catch((err) => {
-                        console.error(
-                            'Oops! An error occurred while forwarding the response to',
-                            recipientId,
-                            ':',
-                            err.stack || err
-                            );
-                    });
-                } else {
-                    console.error('Oops! Couldn\'t find user for session:', sessionId);
-                    // Giving the wheel back to our bot
-                    return Promise.resolve()
+            // This part of the code is adapted for quick replies
+            if (response.quickreplies) {
+            	response.quick_replies=[]; // Renamed quick reply object from Wit
+            	for (var i = 0, len = response.quickreplies.length; i < len; i++) { // Loop through quickreplies
+                    response.quick_replies.push({ title: response.quickreplies[i], content_type: 'text', payload: 'CUSTOM_WIT_AI_QUICKREPLY_ID' + i });
                 }
-            },
+                delete response.quickreplies;
+            }
+
+            return fbWitMessage(recipientId, response)
+            .then(() => null)
+            .catch((err) => {
+                console.error(
+                    'Oops! An error occurred while forwarding the response to',
+                    recipientId,
+                    ':',
+                    err.stack || err
+                );
+            });
+        } else {
+            console.error('Oops! Couldn\'t find user for session:', sessionId);
+            // Giving the wheel back to our bot
+            return Promise.resolve()
+        }
+    },
+
     // You should implement your custom actions here
     // See https://wit.ai/docs/quickstart
     greetings({sessionId}) {
-     return new Promise(function(resolve, reject) {
-      const recipientId = sessions[sessionId].fbid;
-      console.log('greetings function called');  
-      fbGoMessage(recipientId);
-    });
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('greetings function called');  
+            fbGoMessage(recipientId);
+        });
     },
 
     getFood({context, entities, sessionId}) {
@@ -462,42 +451,41 @@ const actions = {
             const recipientId = sessions[sessionId].fbid;
             console.log('Initiating getFood function...');
 
-    					//define search parameters
-    					var location = firstEntityValue(entities, "location") || context.location
-    					var cuisine = firstEntityValue(entities, "cuisine") || context.cuisine
+			//define search parameters
+			var location = firstEntityValue(entities, "location") || context.location
+			var cuisine = firstEntityValue(entities, "cuisine") || context.cuisine
 
 
-                        if(cuisine!=null){
-                            context.cuisine= cuisine;
-                            delete context.getCuisine;
-                        } else {
-                            context.getCuisine =true;
-                        }			
-                        if(location!=null) {
-                            context.location= location;
-                            delete context.getCuisine;
-                        } else {
-                            context.missinglocation=true;
-                        }
-                        if (location && cuisine) {
-                            context.recommend = search(location, cuisine, recipientId);
-                            console.log('Recommending...');
-                            return context = {};
-                        }
+            if(cuisine!=null){
+                context.cuisine= cuisine;
+                delete context.getCuisine;
+            } else {
+                context.getCuisine =true;
+            }			
+            if(location!=null) {
+                context.location= location;
+                delete context.getCuisine;
+            } else {
+                context.missinglocation=true;
+            }
+            if (location && cuisine) {
+                context.recommend = search(location, cuisine, recipientId);
+                console.log('Recommending...');
+                return context = {};
+            }
 
-                 return resolve(context);
-             });
+            return resolve(context);
+        });
     }
 }; //must keep this 
 	
-	const search = (location, cuisine, recipientId) =>{	
-		console.log("Searching yelp");
-
-		//insert codes for yelp search and fb template here
-        //  return yelp.search({ term: cuisine, location: location, limit: 1})
-        const message = "I know where to get good " +cuisine+" in "+location+"! Follow me!";
-        recommendChunk(recipientId, message,null,null,location,wantsOpen,priceRange, cuisine, null);
-    };
+const search = (location, cuisine, recipientId) =>{	
+	console.log("Searching yelp");
+	//insert codes for yelp search and fb template here
+    //  return yelp.search({ term: cuisine, location: location, limit: 1})
+    const message = "I know where to get good " +cuisine+" in "+location+"! Follow me!";
+    recommendChunk(recipientId, message,null,null,location,wantsOpen,priceRange, cuisine, sortBy);
+};
 
 // Setting up our bot
 const wit = new Wit({
@@ -508,17 +496,13 @@ const wit = new Wit({
 
 // ----------------------------------------------------------------------------
 // Yelp API specific code
-
-// new v3 API Codes
-var Yelp = require('yelp-api-v3');
-
+// ----------------------------------------------------------------------------
 var yelp = new Yelp({
   app_id: YELP_ID,
   app_secret: YELP_SECRET
 });
 
 // use different package for Biz search
-var YelpBiz = require('node-yelp-fusion');
 var yelpBiz = new YelpBiz({ id: YELP_ID, secret: YELP_SECRET});
 
 // Intialize variables that we will save to global
@@ -630,7 +614,7 @@ var wantsHighRating = false;
 var wantsLowPrice = false;
 var ratingFloor = 3;
 var priceCeiling = 4;
-
+var sortBy = null;
 
 const updatePriceRange = (data) => {
     var res = "";
@@ -651,7 +635,7 @@ const updatePriceRange = (data) => {
 }
 
 const updateSortBy = (data) => {
-    var res = "";
+    const res = "";
     if (data) {
         res = "rating";
     } else {
@@ -663,16 +647,19 @@ const updateSortBy = (data) => {
 var priceRange = updatePriceRange(priceCeiling);
 
 // ----------------------------------------------------------------------------
-// Create standard conversation chunks
-
+// Conversation Code Chunks
+// ----------------------------------------------------------------------------
 const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,cuisine,sortBy) => {
+    
     if (!cuisine) {
         cuisine = "";
     }
+
     sortBy = updateSortBy(sortBy);
-    typing(sender)
+    
+    fbMessage(sender,message)
     .then(function(data) {
-        fbMessage(sender, message);
+        typing(sender);
     })
     .then(function (data) {
         if (lat&long) {
@@ -691,29 +678,29 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,c
         saveYelpBusinessOutput(data);
     })
     .then(function (data) {
-            /*
-            var i = responseCounter;
-            while (!jsonName[i] || !jsonImage[i] || !jsonUrl[i] || !jsonCat[i] || !jsonNumber[i] || !jsonRating[i]
-                    || !jsonMapLat[i] || !jsonMapLong[i]) {
-                    i++;
-                    responseCounter = i;
-                    console.log(responseCounter);
-            }
-            */
-            return fbYelpTemplate(
-                sender,
-                jsonName[responseCounter],
-                jsonImage[responseCounter],
-                jsonUrl[responseCounter],
-                jsonCat[responseCounter],
-                jsonNumber[responseCounter],
-                jsonRating[responseCounter],
-                jsonMapLat[responseCounter],
-                jsonMapLong[responseCounter],
-                jsonIsOpenNow,
-                jsonPrice[responseCounter]
-                );
-        })
+        /*
+        var i = responseCounter;
+        while (!jsonName[i] || !jsonImage[i] || !jsonUrl[i] || !jsonCat[i] || !jsonNumber[i] || !jsonRating[i]
+                || !jsonMapLat[i] || !jsonMapLong[i]) {
+                i++;
+                responseCounter = i;
+                console.log(responseCounter);
+        }
+        */
+        return fbYelpTemplate(
+            sender,
+            jsonName[responseCounter],
+            jsonImage[responseCounter],
+            jsonUrl[responseCounter],
+            jsonCat[responseCounter],
+            jsonNumber[responseCounter],
+            jsonRating[responseCounter],
+            jsonMapLat[responseCounter],
+            jsonMapLong[responseCounter],
+            jsonIsOpenNow,
+            jsonPrice[responseCounter]
+        );
+    })
     .then(function (data) {
         if (jsonIsOpenNow=="Closed.") {
             fbNextChoicePref(sender,"wantsOpen");
@@ -744,6 +731,8 @@ const nextRecommendChunk = (sender) => {
             i++;
             if (responseCounter >= jsonName.length) {
                 fbMessage(sender, "That's all I have! Shall I go back to the first recommendation?");
+                // Missing a method here to go back to the first recommendation.
+
                 responseCounter = 0;
                 break;
             } else {
@@ -751,9 +740,9 @@ const nextRecommendChunk = (sender) => {
             }
         }
         if (responseCounter < jsonName.length && responseCounter != 0) {
-            typing(sender)
+            fbMessage(sender, "How about this?")
             .then(function(data){
-                fbMessage(sender, "How about this?");
+                typing(sender);
             })
             .then(function (data) {
                 return yelpBiz.business(jsonId[responseCounter])
@@ -795,7 +784,8 @@ const nextRecommendChunk = (sender) => {
 };
 
 // ----------------------------------------------------------------------------
-
+// App Main Code Body
+// ----------------------------------------------------------------------------
 // Starting our webserver and putting it all together
 const app = express();
 app.use(({method, url}, rsp, next) => {
@@ -849,14 +839,12 @@ app.post('/webhook', (req, res) => {
 
                                 // Run lat and long through to yelp api
                                 const message = "How about this?"
-                                recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,null);
+                                recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy);
                                                         
                             } else {
-
                                 // Let's reply with an automatic message
                                 fbMessage(sender, "C'mon, I'm just a bot. I won't understand random attachments...")
                                 .catch(console.error);
-
                             }
 
                         } else if (text) {
@@ -870,22 +858,24 @@ app.post('/webhook', (req, res) => {
                                     wantsOpen = true;
                                     responseCounter = 0;
                                     const message = "Haha right. Here are some open ones.";
-                                    recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,null);
+                                    recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy);
                             } else if (text=="It's too expensive!") {
                                     wantsLowPrice = true;
                                     responseCounter = 0;
                                     if (priceCeiling==1) {
-                                        fbMessage(sender,"Hmm, these are already the cheapest restaurants I have for you. Maybe I should start the search again?")
+                                        fbMessage(sender,"Hmm, these are already the cheapest restaurants I have for you. Maybe I should start the search again?");
+                                        // Missing method to start search again
                                     } else {
                                         priceRange = updatePriceRange(priceCeiling-1);   
                                         const message = "Hmm, here are some cheaper alternatives.";
-                                        recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,null);
+                                        recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,sortBy);
                                     }
-                            } else if (text=="Kinda badly rated no?") {
+                            } else if (text=="Kinda badly rated no...") {
                                     wantsHighRating = true;
                                     responseCounter = 0;
-                                    const message = "Hmm, I change rank them from best rated to worst rated. Here goes";
-                                    recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,null);
+                                    sortBy = updateSortBy(wantsHighRating);
+                                    const message = "Hmm, got it. I've ranked the best results first now.";
+                                    recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,sortBy);
                             } else if (text=="This is good! Thks!") {
                                     // This part is to end off the conversation.
                                     fbMessage(sender, "No problemo! Just share your location again in the future to restart this conversation! Alternatively, you could just type Hi :). A smiley face is also preferred.");
@@ -948,15 +938,6 @@ app.post('/webhook', (req, res) => {
     res.sendStatus(200);
 })
 
-
-/*
-* Verify that the callback came from Facebook. Using the App Secret from
-* the App Dashboard, we can verify the signature that is sent with each
-* callback in the x-hub-signature field, located in the header.
-*
-* https://developers.facebook.com/docs/graph-api/webhooks#setup
-*
-*/
 function verifyRequestSignature(req, res, buf) {
     var signature = req.headers["x-hub-signature"];
 
