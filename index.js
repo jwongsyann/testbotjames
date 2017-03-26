@@ -95,6 +95,24 @@ const typing = (id) => {
     });
 };
 
+//Get user name
+const user_name = (id,data) => {
+	    const body = JSON.stringify({
+			        recipient: { id },
+					 });
+	const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
+	return fetch ('https://graph.facebook.com/v2.6/<USER_ID>?fields=first_name&' + qs, {
+		method:'GET',})
+	    .then(rsp => rsp.json())
+	    .then(json => {
+	        if (json.error && json.error.message) {
+	            throw new Error(json.error.message);
+	        }
+	        return json;
+			var username =json.first_name;
+	    });
+	};
+
 // Generic function to send any message
 const fbMessage = (id, text) => {
     const body = JSON.stringify({
@@ -158,7 +176,7 @@ const fbAskForLocation = (id) => {
     const body = JSON.stringify({
         recipient: { id },
         message: {
-            text:"Please share your current location or the drop the pin in the region of where you would like to eat.",
+			text:"Where are you?",
             quick_replies: 
             [
             {
@@ -496,53 +514,73 @@ const actions = {
     },
 
     greetings({sessionId}) {
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log('greetings function called');  
-            fbGoMessage(recipientId);
-        });
+     return new Promise(function(resolve, reject) {
+      const recipientId = sessions[sessionId].fbid;
+      console.log('greetings function called');  
+	//  fbMessage(recipientId,'Hello'+username)
+	  fbMessage(recipientId, "Hey wassup! Need some food inspiration?")
+      .then(fbGoMessage(recipientId));
+    });
+    },
+	
+	
+    GettingToKnowJames({sessionId}) {
+     return new Promise(function(resolve, reject) {
+      const recipientId = sessions[sessionId].fbid;
+      console.log('GTKJ function called');  
+	  fbMessage(recipientId, "My name is James, but my friends call me foodie-James! I LOVE food, and I love sharing good food places with people!") 
+	  .then(fbMessage(recipientId, "Buzz me anytime if you need food recommendations! ;D"))
+      .then(fbGoMessage(recipientId));
+    });
+
     },
 
     getFood({context, entities, sessionId}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('Initiating getFood function...');
+			typing(recipientId);
 
-			//define search parameters
-			var location = firstEntityValue(entities, "location") || context.location
-			var cuisine = firstEntityValue(entities, "cuisine") || context.cuisine
+    					//define search parameters
+    					var location = firstEntityValue(entities, "location") || context.location
+    					var food = firstEntityValue(entities, "food") || context.food
 
 
-            if(cuisine!=null){
-                context.cuisine= cuisine;
-                delete context.getCuisine;
-            } else {
-                context.getCuisine =true;
-            }			
-            if(location!=null) {
-                context.location= location;
-                delete context.getCuisine;
-            } else {
-                context.missinglocation=true;
-            }
-            if (location && cuisine) {
-                context.recommend = search(location, cuisine, recipientId);
-                console.log('Recommending...');
-                return context = {};
-            }
+                        if(food!=null){
+                            context.food= food;
+                            delete context.missingfood;
+                        } else {
+                            context.missingfood =true;
+                        }			
+                        if(location!=null) {
+                            context.location= location;
+                            delete context.missingfood;
+                        } else {
+						  context.missinglocation=true;
+                        }
+                        if (location && food) {
+                            context.recommend = search(location, food, recipientId);
+                            console.log('Recommending...');
+							return context = {};
+							console.log('Reset context...');
+
+                        }
+
 
             return resolve(context);
         });
     }
 }; //must keep this 
-	
-const search = (location, cuisine, recipientId) =>{	
-	console.log("Searching yelp");
-	//insert codes for yelp search and fb template here
-    //  return yelp.search({ term: cuisine, location: location, limit: 1})
-    const message = "I know where to get good " +cuisine+" in "+location+"! Follow me!";
-    recommendChunk(recipientId, message,null,null,location,wantsOpen,priceRange, cuisine, sortBy);
-};
+
+	const search = (location, food, recipientId) =>{	
+		console.log("Searching yelp");
+		//insert codes for yelp search and fb template here
+        const message = "I know where to get good " +food+" in "+location+"! Follow me!";
+        recommendChunk(recipientId, message,null,null,location,wantsOpen,priceRange, food, null);
+		return context = {};
+		console.log('Reset context...');
+    };
+
 
 // Setting up our bot
 const wit = new Wit({
@@ -704,12 +742,11 @@ const updateSortBy = (data) => {
 var priceRange = updatePriceRange(priceCeiling);
 
 // ----------------------------------------------------------------------------
-// Conversation Code Chunks
-// ----------------------------------------------------------------------------
-const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,cuisine,sortBy) => {
-    
-    if (!cuisine) {
-        cuisine = "";
+// Create standard conversation chunks
+
+const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,food,sortBy) => {
+    if (!food) {
+        food = "";
     }
 
     sortBy = updateSortBy(sortBy);
@@ -720,9 +757,9 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,c
     })
     .then(function (data) {
         if (lat&long) {
-                return yelp.search({term: cuisine+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, limit: 30});
+                return yelp.search({term: food+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, limit: 30});
         } else if (location) {
-                return yelp.search({term: cuisine+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy,limit: 30});
+                return yelp.search({term: food+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy,limit: 30});
         }
     })
     .then(function (data) {
@@ -898,6 +935,7 @@ app.post('/webhook', (req, res) => {
                                 lat = attachments[0].payload.coordinates.lat;
                                 long = attachments[0].payload.coordinates.long;
 
+
                                 // Run lat and long through to yelp api
                                 const message = "How about this?"
                                 recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy);
@@ -913,7 +951,7 @@ app.post('/webhook', (req, res) => {
                             if (text=="Let's go!" || text=="I'm hungry!") {
                                     // This part is for the beginning conversation!
                                     fbAskForLocation(sender);
-                            } else if (text=="Okay, show me.") {
+                            } else if (text=="Show me sth else.") {
                                     nextRecommendChunk(sender);
                             } else if (text=="Um.. it's closed...") {
                                     wantsOpen = true;
@@ -986,7 +1024,7 @@ app.post('/webhook', (req, res) => {
                         if (text=='"startConvo"') {
                             requestUserName(sender)
                             .then(function(data){
-                                fbMessage(sender,"Hi "+data+"!"+" Name's James. I give you the best places to eat. At any point of time, if you would like to get a new suggestion from me on places to eat, just share your location or the location around which you would like to get suggestions from!");
+                                fbMessage(sender,"Hi, my name is James, but my friends call me foodie-James! I LOVE food and I love sharing good food places with people! Tell me where you are (and what you feel like eating), so I can give you some food recommendations!");
                             })
                             .then(function(data){
                                 fbGoMessage(sender);
