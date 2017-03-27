@@ -119,7 +119,7 @@ const fbGoMessage = (id) => {
     const body = JSON.stringify({
         recipient: { id },
         message: {
-            text:"Shall we begin?",
+            text:"Shall we find look for somwhere to eat?",
             quick_replies: 
             [
             {
@@ -129,7 +129,7 @@ const fbGoMessage = (id) => {
             },
             {
                 "content_type":"text",
-                "title":"I'm hungry!",
+                "title":"I'm hungry.",
                 "payload":"go" 
             }
             ]
@@ -488,17 +488,17 @@ const actions = {
 		 console.log('greetings function called');  
       const recipientId = sessions[sessionId].fbid;
 	   console.log(recipientId);
-	   requestUserName(recipientId)
+	  requestUserName(recipientId)
 	     .then(function(data){
-			 fbMessage(recipientId,"Hey " +data+ "! Wasssup? Need some food inspiration?");
-		   setTimeout(fbGoMessage(recipientId),10);
+			 fbMessage(recipientId,"Hey " +data+ "!")
+			 .then(function(){fbGoMessage(recipientId)});
+		 });
+
              // context.name =  data;
              });
             return resolve(context);
-     
-	
 	 
-    });
+    //});
     },
 	
   	null ({sessionId, context, text, entities}) 
@@ -510,9 +510,9 @@ const actions = {
      return new Promise(function(resolve, reject) {
       const recipientId = sessions[sessionId].fbid;
       console.log('GTKJ function called');  
-	  fbMessage(recipientId, "My name is James, but my friends call me foodie-James! I LOVE food, and I love sharing good food places with people!") 
-	  .then(fbMessage(recipientId, "Buzz me anytime if you need food recommendations! ;D"))
-      .then(fbGoMessage(recipientId));
+	  fbMessage(recipientId, "My name is James, but my friends call me foodie-James! I LOVE food, and I love sharing good food places with people!")
+	  .then(function(){fbMessage(recipientId, "Buzz me anytime if you need food recommendations! ;)")})
+	  .then(function(){fbGoMessage(recipientId)});
     });
 
     },
@@ -539,6 +539,7 @@ const actions = {
                             delete context.missingfood;
                         } else {
 						  context.missinglocation=true;
+						return  fbAskForLocation(recipientId);
                         }
                         if (location && food) {
                             context.recommend = search(location, food, recipientId);
@@ -942,7 +943,7 @@ app.post('/webhook', (req, res) => {
                                     recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy);
                             } else if (text=="It's too expensive!") {
                                     wantsLowPrice = true;
-                                    responseCounter = 0;
+                                    responseCounter = 0; 
                                     if (priceCeiling==1) {
                                         fbMessage(sender,"Hmm, these are already the cheapest restaurants I have for you. Maybe I should start the search again?")
                                         .then(function(data){
