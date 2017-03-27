@@ -481,28 +481,30 @@ const actions = {
 
     // You should implement your custom actions here
     // See https://wit.ai/docs/quickstart
-    getName({sessionId, context, entities}) {
-        return new Promise(function(resolve,reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log(recipientId);
-            requestUserName(recipientId)
-            .then(function(data){
-                context.name = data;
-            })
-            return resolve(context);
-        })
-    },
 
-    greetings({sessionId}) {
-     return new Promise(function(resolve, reject) {
+
+    greetings({context, entities,sessionId,data}) {
+     return new Promise(function(resolve, reject) { 
+		 console.log('greetings function called');  
       const recipientId = sessions[sessionId].fbid;
-      console.log('greetings function called');  
-	//  fbMessage(recipientId,'Hello'+username)
-	  fbMessage(recipientId, "Hey wassup! Need some food inspiration?")
-      .then(fbGoMessage(recipientId));
+	   console.log(recipientId);
+	   requestUserName(recipientId)
+	     .then(function(data){
+			 fbMessage(recipientId,"Hey " +data+ "! Wasssup? Need some food inspiration?");
+		   setTimeout(fbGoMessage(recipientId),10);
+             // context.name =  data;
+             });
+            return resolve(context);
+     
+	
+	 
     });
     },
 	
+  	null ({sessionId, context, text, entities}) 
+	 {
+	      return Promise.resolve();
+	},
 	
     GettingToKnowJames({sessionId}) {
      return new Promise(function(resolve, reject) {
