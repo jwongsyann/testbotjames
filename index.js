@@ -119,7 +119,7 @@ const fbGoMessage = (id) => {
     const body = JSON.stringify({
         recipient: { id },
         message: {
-            text:"Shall we begin?",
+            text:"Shall we find look for somwhere to eat?",
             quick_replies: 
             [
             {
@@ -129,7 +129,7 @@ const fbGoMessage = (id) => {
             },
             {
                 "content_type":"text",
-                "title":"I'm hungry!",
+                "title":"I'm hungry.",
                 "payload":"go" 
             }
             ]
@@ -481,36 +481,38 @@ const actions = {
 
     // You should implement your custom actions here
     // See https://wit.ai/docs/quickstart
-    getName({sessionId, context, entities}) {
-        return new Promise(function(resolve,reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log(recipientId);
-            requestUserName(recipientId)
-            .then(function(data){
-                context.name = data;
-            })
-            return resolve(context);
-        })
-    },
 
-    greetings({sessionId}) {
-     return new Promise(function(resolve, reject) {
+
+    greetings({context, entities,sessionId,data}) {
+     return new Promise(function(resolve, reject) { 
+		 console.log('greetings function called');  
       const recipientId = sessions[sessionId].fbid;
-      console.log('greetings function called');  
-	//  fbMessage(recipientId,'Hello'+username)
-	  fbMessage(recipientId, "Hey wassup! Need some food inspiration?")
-      .then(fbGoMessage(recipientId));
-    });
+	   console.log(recipientId);
+	  requestUserName(recipientId)
+	     .then(function(data){
+			 fbMessage(recipientId,"Hey " +data+ "!")
+			 .then(function(){fbGoMessage(recipientId)});
+		 });
+
+             // context.name =  data;
+             });
+            return resolve(context);
+	 
+    //});
     },
 	
+  	null ({sessionId, context, text, entities}) 
+	 {
+	      return Promise.resolve();
+	},
 	
     GettingToKnowJames({sessionId}) {
      return new Promise(function(resolve, reject) {
       const recipientId = sessions[sessionId].fbid;
       console.log('GTKJ function called');  
-	  fbMessage(recipientId, "My name is James, but my friends call me foodie-James! I LOVE food, and I love sharing good food places with people!") 
-	  .then(fbMessage(recipientId, "Buzz me anytime if you need food recommendations! ;D"))
-      .then(fbGoMessage(recipientId));
+	  fbMessage(recipientId, "My name is James, but my friends call me foodie-James! I LOVE food, and I love sharing good food places with people!")
+	  .then(function(){fbMessage(recipientId, "Buzz me anytime if you need food recommendations! ;)")})
+	  .then(function(){fbGoMessage(recipientId)});
     });
 
     },
@@ -537,6 +539,7 @@ const actions = {
                             delete context.missingfood;
                         } else {
 						  context.missinglocation=true;
+						return  fbAskForLocation(recipientId);
                         }
                         if (location && food) {
                             context.recommend = search(location, food, recipientId);
@@ -940,7 +943,7 @@ app.post('/webhook', (req, res) => {
                                     recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy);
                             } else if (text=="It's too expensive!") {
                                     wantsLowPrice = true;
-                                    responseCounter = 0;
+                                    responseCounter = 0; 
                                     if (priceCeiling==1) {
                                         fbMessage(sender,"Hmm, these are already the cheapest restaurants I have for you. Maybe I should start the search again?")
                                         .then(function(data){
