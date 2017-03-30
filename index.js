@@ -245,7 +245,7 @@ const fbNextChoice = (id) => {
             [
             {
                 "content_type":"text",
-                "title":"Okay, show me.",
+                "title":"Show me sth else.",
                 "payload":"nextChoice"
             },
             {

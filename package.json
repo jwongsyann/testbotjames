@@ -13,6 +13,7 @@
     "body-parser": "^1.16.1",
     "express": "^4.14.1",
     "facebook-node-sdk": "^0.2.0",
+    "mongoose": "^4.9.2",
     "node-wit": "^4.2.0",
     "node-yelp-fusion": "^1.0.4",
     "request": "^2.79.0",
