@@ -115,11 +115,11 @@ const fbMessage = (id, text) => {
 };
 
 // Standard function to send Let's go or I'm hungry quick replies
-const fbGoMessage = (id) => {
+const fbGoMessage = (id, message) => {
     const body = JSON.stringify({
         recipient: { id },
         message: {
-            text:"Shall we begin?",
+            text:message,
             quick_replies: 
             [
             {
@@ -298,7 +298,7 @@ const fbNextChoicePref = (id, pref) => {
         var quick_replies = [
         {
             "content_type":"text",
-            "title":"Okay, show me.",
+            "title":"Show me sth else.",
             "payload":"nextChoice"
         },
         {
@@ -316,7 +316,7 @@ const fbNextChoicePref = (id, pref) => {
         var quick_replies = [
         {
             "content_type":"text",
-            "title":"Okay, show me.",
+            "title":"Show me sth else.",
             "payload":"nextChoice"
         },
         {
@@ -334,7 +334,7 @@ const fbNextChoicePref = (id, pref) => {
         var quick_replies = [
         {
             "content_type":"text",
-            "title":"Okay, show me.",
+            "title":"Show me sth else.",
             "payload":"nextChoice"
         },
         {
@@ -443,41 +443,41 @@ const firstEntityValue = (entities, entity) => {
 };
 
 // Our bot actions
-const actions = {
-    send({sessionId}, response) {
-        // Our bot has something to say!
-        // Let's retrieve the Facebook user whose session belongs to
-        const recipientId = sessions[sessionId].fbid;
-        if (recipientId) {
-            // Yay, we found our recipient!
-            // Let's forward our bot response to her.
-            // We return a promise to let our bot know when we're done sending
+const actions = { send({sessionId}, response) {
+    // Our bot has something to say!
+    // Let's retrieve the Facebook user whose session belongs to
+    const recipientId = sessions[sessionId].fbid;
+    
+    if (recipientId) {
+    // Yay, we found our recipient!
+    // Let's forward our bot response to her.
+    // We return a promise to let our bot know when we're done sending
 
-            // This part of the code is adapted for quick replies
-            if (response.quickreplies) {
-            	response.quick_replies=[]; // Renamed quick reply object from Wit
-            	for (var i = 0, len = response.quickreplies.length; i < len; i++) { // Loop through quickreplies
+    // This part of the code is adapted for quick replies
+        if (response.quickreplies) {
+            response.quick_replies=[]; // Renamed quick reply object from Wit
+                for (var i = 0, len = response.quickreplies.length; i < len; i++) { // Loop through quickreplies
                     response.quick_replies.push({ title: response.quickreplies[i], content_type: 'text', payload: 'CUSTOM_WIT_AI_QUICKREPLY_ID' + i });
                 }
-                delete response.quickreplies;
-            }
-
-            return fbWitMessage(recipientId, response)
-            .then(() => null)
-            .catch((err) => {
-                console.error(
-                    'Oops! An error occurred while forwarding the response to',
-                    recipientId,
-                    ':',
-                    err.stack || err
-                );
-            });
-        } else {
-            console.error('Oops! Couldn\'t find user for session:', sessionId);
-            // Giving the wheel back to our bot
-            return Promise.resolve()
+            delete response.quickreplies;
         }
-    },
+
+        return fbWitMessage(recipientId, response)
+        .then(() => null)
+        .catch((err) => {
+        console.error(
+            'Oops! An error occurred while forwarding the response to',
+            recipientId,
+            ':',
+            err.stack || err
+            );
+        });
+    } else {
+        console.error('Oops! Couldn\'t find user for session:', sessionId);
+        // Giving the wheel back to our bot
+        return Promise.resolve()
+    }
+},
 
     // You should implement your custom actions here
     // See https://wit.ai/docs/quickstart
@@ -488,30 +488,36 @@ const actions = {
             requestUserName(recipientId)
             .then(function(data){
                 context.name = data;
-            })
+            });
             return resolve(context);
         })
     },
 
     greetings({sessionId}) {
-     return new Promise(function(resolve, reject) {
-      const recipientId = sessions[sessionId].fbid;
-      console.log('greetings function called');  
-	//  fbMessage(recipientId,'Hello'+username)
-	  fbMessage(recipientId, "Hey wassup! Need some food inspiration?")
-      .then(fbGoMessage(recipientId));
-    });
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('greetings function called');  
+            //  fbMessage(recipientId,'Hello'+username)
+            typing(recipientId)
+            .then(function(data){
+                fbGoMessage(recipientId,"Hey wassup! Need some food inspiration?");  
+            })
+        });
     },
-	
-	
+
+    // This does not run!
     GettingToKnowJames({sessionId}) {
-     return new Promise(function(resolve, reject) {
-      const recipientId = sessions[sessionId].fbid;
-      console.log('GTKJ function called');  
-	  fbMessage(recipientId, "My name is James, but my friends call me foodie-James! I LOVE food, and I love sharing good food places with people!") 
-	  .then(fbMessage(recipientId, "Buzz me anytime if you need food recommendations! ;D"))
-      .then(fbGoMessage(recipientId));
-    });
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('GTKJ function called');  
+            fbMessage(recipientId, "My name is James, but my friends call me foodie-James! I LOVE food, and I love sharing good food places with people!") 
+            .then(function(data){
+                fbMessage(recipientId, "Buzz me anytime if you need food recommendations! ;D");
+            })
+            .then(function(data){
+                fbGoMessage(recipientId,"");
+            });
+        });
 
     },
 
@@ -519,54 +525,50 @@ const actions = {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('Initiating getFood function...');
-			typing(recipientId);
+            typing(recipientId);
 
-    					//define search parameters
-    					var location = firstEntityValue(entities, "location") || context.location
-    					var food = firstEntityValue(entities, "food") || context.food
-
-
-                        if(food!=null){
-                            context.food= food;
-                            delete context.missingfood;
-                        } else {
-                            context.missingfood =true;
-                        }			
-                        if(location!=null) {
-                            context.location= location;
-                            delete context.missingfood;
-                        } else {
-						  context.missinglocation=true;
-                        }
-                        if (location && food) {
-                            context.recommend = search(location, food, recipientId);
-                            console.log('Recommending...');
-							return context = {};
-							console.log('Reset context...');
-
-                        }
+            //define search parameters
+            var location = firstEntityValue(entities, "location") || context.location
+            var food = firstEntityValue(entities, "food") || context.food
 
 
-            return resolve(context);
+            if(food!=null){
+                context.food= food;
+                delete context.missingfood;
+            } else {
+                context.missingfood =true;
+            }			
+            if(location!=null) {
+                context.location= location;
+                delete context.missingfood;
+            } else {
+                context.missinglocation=true;
+            }
+            if (location && food) {
+                context.recommend = search(location, food, recipientId);
+                console.log('Recommending...');
+                return context = {};
+                console.log('Reset context...');
+            }
+        return resolve(context);
         });
     }
-}; //must keep this 
+}
 
-	const search = (location, food, recipientId) =>{	
-		console.log("Searching yelp");
-		//insert codes for yelp search and fb template here
-        const message = "I know where to get good " +food+" in "+location+"! Follow me!";
-        recommendChunk(recipientId, message,null,null,location,wantsOpen,priceRange, food, null);
-		return context = {};
-		console.log('Reset context...');
-    };
-
+const search = (location, food, recipientId) => {	
+    console.log("Searching yelp");
+    //insert codes for yelp search and fb template here
+    const message = "I know where to get good " +food+" in "+location+"! Follow me!";
+    recommendChunk(recipientId, message,null,null,location,wantsOpen,priceRange, food, null);
+    return context = {};
+    console.log('Reset context...');
+};
 
 // Setting up our bot
 const wit = new Wit({
-    accessToken: WIT_TOKEN,
-    actions,
-    logger: new log.Logger(log.INFO)
+accessToken: WIT_TOKEN,
+actions,
+logger: new log.Logger(log.INFO)
 });
 
 // ----------------------------------------------------------------------------
@@ -930,7 +932,10 @@ app.post('/webhook', (req, res) => {
                             // We received a text message
                             if (text=="Let's go!" || text=="I'm hungry!") {
                                     // This part is for the beginning conversation!
-                                    fbAskForLocation(sender);
+                                    typing(recipientId)
+                                    .then(function(data){
+                                        fbAskForLocation(sender);    
+                                    });                                
                             } else if (text=="Show me sth else.") {
                                     nextRecommendChunk(sender);
                             } else if (text=="Um.. it's closed...") {
@@ -986,7 +991,7 @@ app.post('/webhook', (req, res) => {
                                     })
                                     .catch((err) => {
                                         console.error('Oops! Got an error from Wit: ', err.stack || err);
-                                    })                                                
+                                    })                                      
                             }
                         }
                     } else if (event.postback) {
@@ -1007,7 +1012,7 @@ app.post('/webhook', (req, res) => {
                                 fbMessage(sender,"Hi "+ data + ", my name is James, but my friends call me foodie-James! I LOVE food and I love sharing good food places with people! Tell me where you are (and what you feel like eating), so I can give you some food recommendations!");
                             })
                             .then(function(data){
-                                fbGoMessage(sender);
+                                fbGoMessage(sender,"Shall we begin?");
                             })
                             .catch(function(err){
                                 console.error(err);
