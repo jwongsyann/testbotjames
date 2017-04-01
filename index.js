@@ -932,7 +932,7 @@ app.post('/webhook', (req, res) => {
                             // We received a text message
                             if (text=="Let's go!" || text=="I'm hungry!") {
                                     // This part is for the beginning conversation!
-                                    typing(recipientId)
+                                    typing(sender)
                                     .then(function(data){
                                         fbAskForLocation(sender);    
                                     });                                
