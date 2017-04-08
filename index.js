@@ -571,9 +571,9 @@ const search = (location, food, recipientId) => {
 
 // Setting up our bot
 const wit = new Wit({
-accessToken: WIT_TOKEN,
-actions,
-logger: new log.Logger(log.INFO)
+    accessToken: WIT_TOKEN,
+    actions,
+    logger: new log.Logger(log.INFO)
 });
 
 // ----------------------------------------------------------------------------
@@ -698,6 +698,7 @@ var ratingFloor = 3;
 var priceCeiling = 4;
 var sortBy = null;
 var radius = 1000;
+var offset = 0;
 
 const updatePriceRange = (data) => {
     var res = "";
@@ -729,6 +730,58 @@ const updateSortBy = (data) => {
 
 var priceRange = updatePriceRange(priceCeiling);
 
+const updateOffset = () => {
+    offset += 1;
+}
+
+const shuffleYelp = (array) => {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = jsonName[i];
+        var temp2 = jsonCat[i];
+        var temp3 = jsonImage[i];
+        var temp4 = jsonRating[i];
+        var temp5 = jsonPrice[i];
+        var temp6 = jsonUrl[i];
+        var temp7 = jsonMapLat[i];
+        var temp8 = jsonMapLong[i];
+        var temp9 = jsonId[i];
+
+        jsonName[i] = jsonName[j];
+        jsonName[j] = temp;
+
+        jsonCat[i] = jsonCat[j];
+        jsonCat[j] = temp2;
+
+        jsonImage[i] = jsonImage[j];
+        jsonImage[j] = temp3;
+
+        jsonRating[i] = jsonRating[j];
+        jsonRating[j] = temp4;
+
+
+        jsonPrice[i] = jsonPrice[j];
+        jsonPrice[j] = temp5;
+
+
+        jsonUrl[i] = jsonUrl[j];
+        jsonUrl[j] = temp6;
+
+
+        jsonMapLat[i] = jsonMapLat[j];
+        jsonMapLat[j] = temp7;
+
+
+        jsonMapLong[i] = jsonMapLong[j];
+        jsonMapLong[j] = temp8;
+
+
+        jsonId[i] = jsonId[j];
+        jsonId[j] = temp9;
+    }
+    return true;
+}
+
 // ----------------------------------------------------------------------------
 // Create standard conversation chunks
 
@@ -745,13 +798,16 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
     })
     .then(function (data) {
         if (lat&long) {
-                return yelp.search({term: food+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, limit: 30});
+                return yelp.search({term: food+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, offset: offset*30, limit: 30});
         } else if (location) {
-                return yelp.search({term: food+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy, radius: radius, limit: 30});
+                return yelp.search({term: food+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy, radius: radius, offset: offset*30, limit: 30});
         }
     })
     .then(function (data) {
         saveYelpSearchOutput(data);
+    })
+    .then(function(data) {
+        shuffleYelp(jsonName);
     })
     .then(function (data) {
         return yelpBiz.business(jsonId[responseCounter]);
