@@ -868,10 +868,7 @@ const nextRecommendChunk = (sender) => {
             || !jsonMapLat[i] || !jsonMapLong[i]) {
             i++;
             if (responseCounter >= jsonName.length) {
-                fbMessage(sender, "That's all I have! Shall I go back to the first recommendation? Or should I enlarge the search area?")
-                .then(function(data){
-                    fbRestartRecommend(sender);
-                });
+                fbRestartRecommend(sender);
                 responseCounter = 0;
                 break;
             } else {
