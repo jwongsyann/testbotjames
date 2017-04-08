@@ -382,6 +382,11 @@ const fbRestartRecommend = (id) => {
                 "content_type":"text",
                 "title":"Okay.",
                 "payload":"restartRecommend"
+            },
+            {
+                "content_type":"text",
+                "title":"Enlarge search area",
+                "payload":"enlargeSearch"
             }
             ]
         }
@@ -559,7 +564,7 @@ const search = (location, food, recipientId) => {
     console.log("Searching yelp");
     //insert codes for yelp search and fb template here
     const message = "I know where to get good " +food+" in "+location+"! Follow me!";
-    recommendChunk(recipientId, message,null,null,location,wantsOpen,priceRange, food, null);
+    recommendChunk(recipientId, message,null,null,location,wantsOpen,priceRange, food, null,radius);
     return context = {};
     console.log('Reset context...');
 };
@@ -692,6 +697,7 @@ var wantsLowPrice = false;
 var ratingFloor = 3;
 var priceCeiling = 4;
 var sortBy = null;
+var radius = 1000;
 
 const updatePriceRange = (data) => {
     var res = "";
@@ -726,7 +732,7 @@ var priceRange = updatePriceRange(priceCeiling);
 // ----------------------------------------------------------------------------
 // Create standard conversation chunks
 
-const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,food,sortBy) => {
+const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,food,sortBy,radius) => {
     if (!food) {
         food = "";
     }
@@ -739,9 +745,9 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
     })
     .then(function (data) {
         if (lat&long) {
-                return yelp.search({term: food+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, limit: 30});
+                return yelp.search({term: food+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, limit: 30});
         } else if (location) {
-                return yelp.search({term: food+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy,limit: 30});
+                return yelp.search({term: food+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy, radius: radius, limit: 30});
         }
     })
     .then(function (data) {
@@ -796,7 +802,7 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
 const nextRecommendChunk = (sender) => {
     // This part is to respond to the user's request for other recommendations!
     if (responseCounter >= jsonName.length) {
-        fbMessage(sender, "That's all I have! Shall I go back to the first recommendation?")
+        fbMessage(sender, "That's all I have! Shall I go back to the first recommendation? Or should I enlarge the search area?")
         .then(function(data){
             fbRestartRecommend(sender);
         });
@@ -809,7 +815,7 @@ const nextRecommendChunk = (sender) => {
             || !jsonMapLat[i] || !jsonMapLong[i]) {
             i++;
             if (responseCounter >= jsonName.length) {
-                fbMessage(sender, "That's all I have! Shall I go back to the first recommendation?")
+                fbMessage(sender, "That's all I have! Shall I go back to the first recommendation? Or should I enlarge the search area?")
                 .then(function(data){
                     fbRestartRecommend(sender);
                 });
@@ -917,10 +923,9 @@ app.post('/webhook', (req, res) => {
                                 lat = attachments[0].payload.coordinates.lat;
                                 long = attachments[0].payload.coordinates.long;
 
-
                                 // Run lat and long through to yelp api
                                 const message = "How about this?"
-                                recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy);
+                                recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
                                                         
                             } else {
                                 // Let's reply with an automatic message
@@ -942,7 +947,7 @@ app.post('/webhook', (req, res) => {
                                     wantsOpen = true;
                                     responseCounter = 0;
                                     const message = "Haha right. Here are some open ones.";
-                                    recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy);
+                                    recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
                             } else if (text=="It's too expensive!") {
                                     wantsLowPrice = true;
                                     responseCounter = 0;
@@ -954,14 +959,18 @@ app.post('/webhook', (req, res) => {
                                     } else {
                                         priceRange = updatePriceRange(priceCeiling-1);   
                                         const message = "Hmm, here are some cheaper alternatives.";
-                                        recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,sortBy);
+                                        recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
                                     }
                             } else if (text=="Kinda badly rated no...") {
                                     wantsHighRating = true;
                                     responseCounter = 0;
                                     sortBy = updateSortBy(wantsHighRating);
                                     const message = "Hmm, got it. I've ranked the best results first now.";
-                                    recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,sortBy);
+                                    recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
+                            } else if (text=="Enlarge search area") {
+                                    const message = "Okie dokes, enlarging search area to 5 kilometers!";
+                                    radius = 5000;
+                                    recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
                             } else if (text=="This is good! Thks!") {
                                     // This part is to end off the conversation.
                                     fbMessage(sender, "No problemo! Just share your location again in the future to restart this conversation! Alternatively, you could just type Hi :). A smiley face is also preferred.");
