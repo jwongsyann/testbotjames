@@ -376,6 +376,7 @@ const fbRestartRecommend = (id) => {
     const body = JSON.stringify({
         recipient: {id},
         message: {
+            text: "That's all I have! Shall I go back to the first recommendation? Or should I enlarge the search area?",
             quick_replies: 
             [
             {
@@ -675,7 +676,6 @@ const saveYelpSearchOutput = (data) => {
 const saveYelpBusinessOutput = (data) => {
     if (data.hours) {
         const jsonHours = data.hours;
-        console.log(jsonHours);
         jsonIsOpenNow = jsonHours[0].is_open_now; 
         if (jsonIsOpenNow==true) {
             jsonIsOpenNow = "Open now."
@@ -858,10 +858,7 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
 const nextRecommendChunk = (sender) => {
     // This part is to respond to the user's request for other recommendations!
     if (responseCounter >= jsonName.length) {
-        fbMessage(sender, "That's all I have! Shall I go back to the first recommendation? Or should I enlarge the search area?")
-        .then(function(data){
-            fbRestartRecommend(sender);
-        });
+        fbRestartRecommend(sender);
         responseCounter = 0;
     } else {
         var i = responseCounter;
