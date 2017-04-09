@@ -668,8 +668,7 @@ const saveYelpSearchOutput = (data) => {
             i++;
         } while (i < jsonBiz.length);
     }
-    var resObj = [jsonName, jsonUrl, jsonCat, jsonImage, jsonNumber, jsonRating, jsonMapLat, jsonMapLong, jsonId, jsonPrice];
-    return resObj;
+    return true;
 };
 
 // Create function to save yelp business output
@@ -806,7 +805,7 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
     .then(function (data) {
         saveYelpSearchOutput(data);
     })
-    .then(function(data) {
+    .then(function (data) {
         shuffleYelp(jsonName);
     })
     .then(function (data) {
