@@ -203,11 +203,14 @@ const fbYelpTemplate = (id, name, image_url, url, category, phone_number, rating
                             url: url,
                             title: "View website"
                         },
-                        {
-                            type: "phone_number",
-                            title: "Call",
-                            payload: phone_number
-                        },
+                         {
+                         	type: "element_share"
+                         },
+						 // {
+						 // 							 type: "phone_number",
+						 // 							 title: "Call",
+						 // 							 payload: phone_number
+						 // },
                         {
                             type: "web_url",
                             title: "Show Map",
