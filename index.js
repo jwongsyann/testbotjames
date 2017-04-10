@@ -124,12 +124,12 @@ const fbGoMessage = (id, message) => {
             [
             {
                 "content_type":"text",
-                "title":"Let's go!",
+                "title":"Yeah, so hungry!",
                 "payload":"go"
             },
             {
                 "content_type":"text",
-                "title":"I'm hungry.",
+                "title":"Who are you?",
                 "payload":"go" 
             }
             ]
@@ -195,13 +195,13 @@ const fbYelpTemplate = (id, name, image_url, url, category, phone_number, rating
                     {
                         title: name,
                         image_url: image_url,
-                        subtitle: category + "\nRating:" + rating +"/5" + "\nPricing:"+price+"\n"+is_open_now,
+                        subtitle: category + "\nRating:" + rating +"🌟" + "\nPricing:"+price+"💰\n"+is_open_now,
                         buttons: 
                         [
                         {
                             type: "web_url",
                             url: url,
-                            title: "View website"
+                            title: "View website "
                         },
                          {
                          	type: "element_share"
@@ -693,6 +693,9 @@ const saveYelpBusinessOutput = (data) => {
     return resObj;
 };
 
+
+
+
 // Save some preference parameters
 var wantsOpen = false;
 var wantsHighRating = false;
@@ -986,9 +989,11 @@ app.post('/webhook', (req, res) => {
                                 .catch(console.error);
                             }
 
-                        } else if (text) {
+                        } 
+						else if (text) {
                             // We received a text message
-                            if (text=="Let's go!" || text=="I'm hungry!") {
+							
+                            if (text=="Yeah, I'm so hungry!") {
                                     // This part is for the beginning conversation!
                                     typing(sender)
                                     .then(function(data){
