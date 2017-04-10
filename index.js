@@ -581,8 +581,8 @@ const wit = new Wit({
 // Yelp API specific code
 // ----------------------------------------------------------------------------
 var yelp = new Yelp({
-  app_id: YELP_ID,
-  app_secret: YELP_SECRET
+    app_id: YELP_ID,
+    app_secret: YELP_SECRET
 });
 
 // use different package for Biz search
@@ -824,29 +824,44 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
                 console.log(responseCounter);
         }
         */
-        return fbYelpTemplate(
-            sender,
-            jsonName[responseCounter],
-            jsonImage[responseCounter],
-            jsonUrl[responseCounter],
-            jsonCat[responseCounter],
-            jsonNumber[responseCounter],
-            jsonRating[responseCounter],
-            jsonMapLat[responseCounter],
-            jsonMapLong[responseCounter],
-            jsonIsOpenNow,
-            jsonPrice[responseCounter]
-        );
+        while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 || jsonCat[responseCounter].indexOf("Convenience")!=-1 || jsonCat[responseCounter].indexOf("Grocery")!=-1) {
+            responseCounter += 1;
+        }
+        if (responseCounter >= jsonName.length) {
+            fbRestartRecommend(sender);
+            responseCounter = 0;
+        } else {
+            saveYelpBusinessOutput(yelpBiz.business(jsonId[responseCounter]));
+        }
+    })
+    .then(function(data) {
+        if (responseCounter < jsonName.length) {
+            return fbYelpTemplate(
+                sender,
+                jsonName[responseCounter],
+                jsonImage[responseCounter],
+                jsonUrl[responseCounter],
+                jsonCat[responseCounter],
+                jsonNumber[responseCounter],
+                jsonRating[responseCounter],
+                jsonMapLat[responseCounter],
+                jsonMapLong[responseCounter],
+                jsonIsOpenNow,
+                jsonPrice[responseCounter]
+            );    
+        }
     })
     .then(function (data) {
-        if (jsonIsOpenNow=="Closed.") {
-            fbNextChoicePref(sender,"wantsOpen");
-        } else if (jsonPrice[responseCounter]>=priceCeiling) {
-            fbNextChoicePref(sender,"wantsLowPrice")
-        } else if (jsonRating[responseCounter]<=ratingFloor) {
-            fbNextChoicePref(sender,"wantsHighRating")
-        } else {
-            fbNextChoice(sender);
+        if (responseCounter < jsonName.length) {
+            if (jsonIsOpenNow=="Closed.") {
+                fbNextChoicePref(sender,"wantsOpen");
+            } else if (jsonPrice[responseCounter]>=priceCeiling) {
+                fbNextChoicePref(sender,"wantsLowPrice")
+            } else if (jsonRating[responseCounter]<=ratingFloor) {
+                fbNextChoicePref(sender,"wantsHighRating")
+            } else {
+                fbNextChoice(sender);
+            }
         }
     })                                                        
     .catch(function (err) {
