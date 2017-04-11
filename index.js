@@ -1008,7 +1008,7 @@ app.post('/webhook', (req, res) => {
 						else if (text) {
                             // We received a text message
 							
-                            if (text=="Yeah, I'm so hungry!") {
+                            if (text=="Yeah, so hungry!") {
                                     // This part is for the beginning conversation!
                                     typing(sender)
                                     .then(function(data){
