@@ -129,7 +129,7 @@ const fbGoMessage = (id, message) => {
             },
             {
                 "content_type":"text",
-                "title":"I'm hungry!",
+                "title":"I'm hungry.",
                 "payload":"go" 
             }
             ]
@@ -203,11 +203,14 @@ const fbYelpTemplate = (id, name, image_url, url, category, phone_number, rating
                             url: url,
                             title: "View website"
                         },
-                        {
-                            type: "phone_number",
-                            title: "Call",
-                            payload: phone_number
-                        },
+                         {
+                         	type: "element_share"
+                         },
+						 // {
+						 // 							 type: "phone_number",
+						 // 							 title: "Call",
+						 // 							 payload: phone_number
+						 // },
                         {
                             type: "web_url",
                             title: "Show Map",
@@ -487,6 +490,7 @@ const actions = { send({sessionId}, response) {
 
     // You should implement your custom actions here
     // See https://wit.ai/docs/quickstart
+
     getName({sessionId, context, entities}) {
         return new Promise(function(resolve,reject) {
             const recipientId = sessions[sessionId].fbid;
@@ -1014,7 +1018,7 @@ app.post('/webhook', (req, res) => {
                                     recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
                             } else if (text=="It's too expensive!") {
                                     wantsLowPrice = true;
-                                    responseCounter = 0;
+                                    responseCounter = 0; 
                                     if (priceCeiling==1) {
                                         fbMessage(sender,"Hmm, these are already the cheapest restaurants I have for you. Maybe I should start the search again?")
                                         .then(function(data){
