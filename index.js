@@ -119,8 +119,12 @@ const fbGoMessage = (id, message) => {
     const body = JSON.stringify({
         recipient: { id },
         message: {
+<<<<<<< HEAD
 
             text:"Looking for somewhere to eat 😋 ?",
+=======
+            text:message,
+>>>>>>> b1835d4ed486c9323d6522736b9ac55d5fb9673c
             quick_replies: 
             [
             {
