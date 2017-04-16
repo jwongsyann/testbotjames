@@ -152,11 +152,11 @@ const fbGoMessage = (id, message) => {
 }
 
 // Quick reply to request for location
-const fbAskForLocation = (id) => {
+const fbAskForLocation = (id, message) => {
     const body = JSON.stringify({
         recipient: { id },
         message: {
-			text:"Where are you?",
+			text: message,
             quick_replies: 
             [
             {
@@ -498,39 +498,13 @@ const actions = { send({sessionId}, response) {
             requestUserName(recipientId)
             .then(function(data){
                 context.name = data;
+                console.log(context.name);
+                return resolve(context);
             });
-            return resolve(context);
         })
     },
 
-    greetings({sessionId}) {
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log('greetings function called');  
-            //  fbMessage(recipientId,'Hello'+username)
-            typing(recipientId)
-            .then(function(data){
-                fbGoMessage(recipientId,"Hey wassup! Need some food inspiration?");  
-            })
-        });
-    },
-
-    // This does not run!
-    GettingToKnowJames({sessionId}) {
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log('GTKJ function called');  
-            fbMessage(recipientId, "My name is James, but my friends call me foodie-James! I LOVE food, and I love sharing good food places with people!") 
-            .then(function(data){
-                fbMessage(recipientId, "Buzz me anytime if you need food recommendations! ;D");
-            })
-            .then(function(data){
-                fbGoMessage(recipientId,"");
-            });
-        });
-
-    },
-
+    /*
     getFood({context, entities, sessionId}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
@@ -541,7 +515,11 @@ const actions = { send({sessionId}, response) {
             var location = firstEntityValue(entities, "location") || context.location
             var food = firstEntityValue(entities, "food") || context.food
 
+            if (!lat & !long) {
+                context.forecast
+            }
 
+            /* Old code
             if(food!=null){
                 context.food= food;
                 delete context.missingfood;
@@ -562,6 +540,17 @@ const actions = { send({sessionId}, response) {
             }
         return resolve(context);
         });
+    },
+    */
+
+    askLocation({context, sessionId}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            fbAskForLocation(recipientId,"Where are you?")
+            .then(function(data){
+                return resolve(context);
+            });
+        })
     }
 }
 
@@ -1012,7 +1001,7 @@ app.post('/webhook', (req, res) => {
                                     // This part is for the beginning conversation!
                                     typing(sender)
                                     .then(function(data){
-                                        fbAskForLocation(sender);    
+                                        fbAskForLocation(sender,"Where are you?");    
                                     });                                
                             } else if (text=="Show me sth else.") {
                                     nextRecommendChunk(sender);
