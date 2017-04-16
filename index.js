@@ -119,11 +119,8 @@ const fbGoMessage = (id, message) => {
     const body = JSON.stringify({
         recipient: { id },
         message: {
-<<<<<<< HEAD
+
             text:"Looking for somewhere to eat 😋 ?",
-=======
-            text:message,
->>>>>>> f9dbc2a66b416e4eee0055d38cb65d1d21b9a9ca
             quick_replies: 
             [
             {
@@ -495,27 +492,28 @@ const actions = { send({sessionId}, response) {
     // You should implement your custom actions here
     // See https://wit.ai/docs/quickstart
 
-    getName({sessionId, context, entities}) {
-        return new Promise(function(resolve,reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log(recipientId);
-            requestUserName(recipientId)
-            .then(function(data){
-                context.name = data;
-            });
-            return resolve(context);
-        })
-    },
+    // getName({sessionId, context, entities}) {
+    //     return new Promise(function(resolve,reject) {
+    //         const recipientId = sessions[sessionId].fbid;
+    //         console.log(recipientId);
+    //         requestUserName(recipientId)
+    //         .then(function(data){
+    //             context.name = data;
+    //         });
+    //         return resolve(context);
+    //     })
+    // },
 
     greetings({sessionId}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('greetings function called');  
             //  fbMessage(recipientId,'Hello'+username)
-            typing(recipientId)
+            requestUserName(recipientId)
+            //typing(recipientId)
             .then(function(data){
-                fbGoMessage(recipientId,"Hey wassup! Need some food inspiration?");  
-            })
+                fbGoMessage(recipientId,"Hi "+ data);  
+            });
         });
     },
 
@@ -526,11 +524,11 @@ const actions = { send({sessionId}, response) {
             console.log('GTKJ function called');  
             fbMessage(recipientId, "My name is James, but my friends call me foodie-James! I LOVE food, and I love sharing good food places with people!") 
             .then(function(data){
-                fbMessage(recipientId, "Buzz me anytime if you need food recommendations! ;D");
-            })
-            .then(function(data){
-                fbGoMessage(recipientId,"");
+                fbMessage(recipientId, "Buzz me anytime if you need food recommendations! 👍🏻");
             });
+            // .then(function(data){
+//                 fbGoMessage(recipientId,"");
+           // });
         });
 
     },
