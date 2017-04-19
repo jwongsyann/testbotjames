@@ -153,11 +153,11 @@ const fbGoMessage = (id, message) => {
 }
 
 // Quick reply to request for location
-const fbAskForLocation = (id) => {
+const fbAskForLocation = (id, message) => {
     const body = JSON.stringify({
         recipient: { id },
         message: {
-			text:"Where are you?",
+			text: message,
             quick_replies: 
             [
             {
@@ -547,7 +547,6 @@ const actions = { send({sessionId}, response) {
    	  // 			  console.log(context.location);
    	  // 		  })
 			 
-
     getFood({context, entities, sessionId}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
@@ -559,7 +558,11 @@ const actions = { send({sessionId}, response) {
             var location = firstEntityValue(entities, "location") || context.location
             var food = firstEntityValue(entities, "food") || context.food
 
+            if (!lat & !long) {
+                context.forecast
+            }
 
+            /* Old code
             if(food!=null){
                 context.food= food;
                 delete context.missingfood;
@@ -580,6 +583,17 @@ const actions = { send({sessionId}, response) {
             }
         return resolve(context);
         });
+    },
+    */
+
+    askLocation({context, sessionId}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            fbAskForLocation(recipientId,"Where are you?")
+            .then(function(data){
+                return resolve(context);
+            });
+        })
     }
 }
 
@@ -603,8 +617,8 @@ const wit = new Wit({
 // Yelp API specific code
 // ----------------------------------------------------------------------------
 var yelp = new Yelp({
-  app_id: YELP_ID,
-  app_secret: YELP_SECRET
+    app_id: YELP_ID,
+    app_secret: YELP_SECRET
 });
 
 // use different package for Biz search
@@ -849,29 +863,44 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
                 console.log(responseCounter);
         }
         */
-        return fbYelpTemplate(
-            sender,
-            jsonName[responseCounter],
-            jsonImage[responseCounter],
-            jsonUrl[responseCounter],
-            jsonCat[responseCounter],
-            jsonNumber[responseCounter],
-            jsonRating[responseCounter],
-            jsonMapLat[responseCounter],
-            jsonMapLong[responseCounter],
-            jsonIsOpenNow,
-            jsonPrice[responseCounter]
-        );
+        while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 || jsonCat[responseCounter].indexOf("Convenience")!=-1 || jsonCat[responseCounter].indexOf("Grocery")!=-1) {
+            responseCounter += 1;
+        }
+        if (responseCounter >= jsonName.length) {
+            fbRestartRecommend(sender);
+            responseCounter = 0;
+        } else {
+            saveYelpBusinessOutput(yelpBiz.business(jsonId[responseCounter]));
+        }
+    })
+    .then(function(data) {
+        if (responseCounter < jsonName.length) {
+            return fbYelpTemplate(
+                sender,
+                jsonName[responseCounter],
+                jsonImage[responseCounter],
+                jsonUrl[responseCounter],
+                jsonCat[responseCounter],
+                jsonNumber[responseCounter],
+                jsonRating[responseCounter],
+                jsonMapLat[responseCounter],
+                jsonMapLong[responseCounter],
+                jsonIsOpenNow,
+                jsonPrice[responseCounter]
+            );    
+        }
     })
     .then(function (data) {
-        if (jsonIsOpenNow=="Closed.") {
-            fbNextChoicePref(sender,"wantsOpen");
-        } else if (jsonPrice[responseCounter]>=priceCeiling) {
-            fbNextChoicePref(sender,"wantsLowPrice")
-        } else if (jsonRating[responseCounter]<=ratingFloor) {
-            fbNextChoicePref(sender,"wantsHighRating")
-        } else {
-            fbNextChoice(sender);
+        if (responseCounter < jsonName.length) {
+            if (jsonIsOpenNow=="Closed.") {
+                fbNextChoicePref(sender,"wantsOpen");
+            } else if (jsonPrice[responseCounter]>=priceCeiling) {
+                fbNextChoicePref(sender,"wantsLowPrice")
+            } else if (jsonRating[responseCounter]<=ratingFloor) {
+                fbNextChoicePref(sender,"wantsHighRating")
+            } else {
+                fbNextChoice(sender);
+            }
         }
     })                                                        
     .catch(function (err) {
@@ -1015,7 +1044,7 @@ app.post('/webhook', (req, res) => {
                                     // This part is for the beginning conversation!
                                     typing(sender)
                                     .then(function(data){
-                                        fbAskForLocation(sender);    
+                                        fbAskForLocation(sender,"Where are you?");    
                                     });                                
                             } else if (text=="Show me sth else.") {
                                     nextRecommendChunk(sender);
