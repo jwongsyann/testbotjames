@@ -11,6 +11,7 @@ const request = require('request');
 const async = require('async');
 const Yelp = require('yelp-api-v3');
 const YelpBiz = require('node-yelp-fusion');
+const mongoose = require('mongoose');
 
 let Wit = null;
 let log = null;
@@ -56,6 +57,12 @@ if (!YELP_ID) { throw new Error('missing YELP_ID') }
 const YELP_SECRET = process.env.YELP_SECRET;
 if (!YELP_SECRET) { throw new Error('missing YELP_SECRET') }
 
+
+/*
+// Mongoose API parameters
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) { throw new Error('missing MONGODB_URI') }
+*/
 // ----------------------------------------------------------------------------
 // Facebook Messenger API specific code
 // ----------------------------------------------------------------------------
@@ -683,8 +690,6 @@ const saveYelpBusinessOutput = (data) => {
 };
 
 
-
-
 // Save some preference parameters
 var wantsOpen = false;
 var wantsHighRating = false;
@@ -930,6 +935,56 @@ const nextRecommendChunk = (sender) => {
 };
 
 // ----------------------------------------------------------------------------
+// Mongodb Codes
+// ----------------------------------------------------------------------------
+
+var db = mongoose.connect("mongodb://heroku_hq3t2972:2l84bugq42te0t69tq97h2qtvu@ds145370.mlab.com:45370/heroku_hq3t2972");
+const addUser = (fbid,firstName) => {
+    const schema = mongoose.Schema;    
+    const userSessionSchema = new schema({
+        fbid : String,
+        firstName: String,
+        created_at: Date,
+        updated_at: Date
+    });
+
+    // on every save, add the date
+    userSessionSchema.pre('save', function(next) {
+        // get the current date
+        const currentDate = new Date();
+      
+        // change the updated_at field to current date
+        this.updated_at = currentDate;
+
+        // if created_at doesn't exist, add to that field
+        if (!this.created_at)
+        this.created_at = currentDate;
+
+        next();
+    });
+
+    // Add model to mongoose
+    const userSession = mongoose.model('userSession', userSessionSchema);
+
+    // Find user, otherwise save new user
+    // Setup stuff
+    var query = { fbid:fbid },
+        update = { fbid:fbid, firstName: firstName, $setOnInsert: {created_at: new Date()}, updated_at: new Date() },
+        options = { upsert: true, returnNewDocument: true };
+
+    // Find the document
+    userSession.findOneAndUpdate(query, update, options, function(error, result) {
+        if (error) throw error;
+        if (result) {
+            console.log("User session updated!");
+        } else {
+            console.log("User session created!");
+        }
+        db.disconnect();
+    });
+}
+
+// ----------------------------------------------------------------------------
 // App Main Code Body
 // ----------------------------------------------------------------------------
 // Starting our webserver and putting it all together
@@ -966,6 +1021,12 @@ app.post('/webhook', (req, res) => {
                         // Yay! We got a new message!
                         // We retrieve the Facebook user ID of the sender
                         const sender = event.sender.id;
+
+                        // Update user session
+                        requestUserName(sender)
+                        .then(function(data){
+                            addUser(sender,data);
+                        });
 
                         // We retrieve the user's current session, or create one if it doesn't exist
                         // This is needed for our bot to figure out the conversation history
@@ -1075,10 +1136,14 @@ app.post('/webhook', (req, res) => {
 
                         // Store text from payload
                         let text = JSON.stringify(event.postback.payload);
+                        console.log(text);
 
                         // Check if payload is a new conversation and start new conversation thread
                         if (text=='"startConvo"') {
                             requestUserName(sender)
+                            .then(function(data){
+                                addUser(sender,data);
+                            })
                             .then(function(data){
                                 fbMessage(sender,"Hi "+ data + ", my name is James, but my friends call me foodie-James! I LOVE food and I love sharing good food places with people! Tell me where you are (and what you feel like eating), so I can give you some food recommendations!");
                             })
