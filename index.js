@@ -119,12 +119,13 @@ const fbGoMessage = (id, message) => {
     const body = JSON.stringify({
         recipient: { id },
         message: {
-            text:message,
+
+            text:"Looking for somewhere to eat 😋 ?",
             quick_replies: 
             [
             {
                 "content_type":"text",
-                "title":"Yeah, so hungry!",
+                "title":"Yah, so hungry!",
                 "payload":"go"
             },
             {
@@ -490,26 +491,68 @@ const actions = { send({sessionId}, response) {
 
     // You should implement your custom actions here
     // See https://wit.ai/docs/quickstart
-
-    getName({sessionId, context, entities}) {
+    //
+    greetings({sessionId, context, entities}) {
         return new Promise(function(resolve,reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log(recipientId);
+			typing(recipientId);
             requestUserName(recipientId)
             .then(function(data){
-                context.name = data;
-                console.log(context.name);
-                return resolve(context);
-            });
+            context.name = data;
+			console.log(context.name)
+            return resolve(context);
+			});
         })
     },
 
-    /*
+
+    // This does not run!
+    GettingToKnowJames({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('GTKJ function called');  
+            fbMessage(recipientId, "My name is James, but my friends call me foodie-James! I LOVE food, and I love sharing good food places with people!") 
+            .then(function(data){
+                fbMessage(recipientId, "Buzz me anytime if you need food recommendations! 👍🏻");	
+            });
+			return resolve(context);
+        });
+    },
+	
+	askLocation({sessionId,context, entities}) {
+   return new Promise(function(resolve, reject) {
+   const recipientId = sessions[sessionId].fbid;
+	 console.log('askLocation function called');  
+	 typing(recipientId)
+    .then(function(data){
+        fbAskForLocation(recipientId);    
+    });
+    });
+},
+
+     Start({context, entities, sessionId}) {
+  	   	return new Promise(function(resolve, reject) {
+	   	 const recipientId = sessions[sessionId].fbid;	
+		 	 typing(recipientId);
+			 console.log('Start function called...');
+		 fbGoMessage(recipientId);
+			    return resolve(context);
+		  });
+	  		 },
+	   
+   		 // fbAskForLocation(recipientId)
+   		  // .then(function(data){
+   			  // context.location=data
+   	  // 			  console.log(context.location);
+   	  // 		  })
+			 
     getFood({context, entities, sessionId}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
-            console.log('Initiating getFood function...');
+            console.log('GetFood function called...');
             typing(recipientId);
+			fbAskForLocation(recipientId);
 
             //define search parameters
             var location = firstEntityValue(entities, "location") || context.location
@@ -525,7 +568,7 @@ const actions = { send({sessionId}, response) {
                 delete context.missingfood;
             } else {
                 context.missingfood =true;
-            }			
+            }
             if(location!=null) {
                 context.location= location;
                 delete context.missingfood;
@@ -997,7 +1040,7 @@ app.post('/webhook', (req, res) => {
 						else if (text) {
                             // We received a text message
 							
-                            if (text=="Yeah, so hungry!") {
+                            if (text=="Yah, so hungry!") {
                                     // This part is for the beginning conversation!
                                     typing(sender)
                                     .then(function(data){
