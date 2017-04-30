@@ -504,19 +504,10 @@ const actions = {
     greetings({sessionId, context, entities}) {
         return new Promise(function(resolve,reject) {
             const recipientId = sessions[sessionId].fbid;
-            console.log(recipientId);
 
             userSession.findOne({fbid:recipientId},function(err,res) {
                 if (err) throw err;
-                if (res) {
-                    context.existingUser = true;
-                    console.log("Repeat!");
-                    return res;
-                } else {
-                    context.newUser = true;
-                    console.log("new User!");
-                    return true;
-                }
+                return res;
             })
             .then(function(data){
                 typing(recipientId);
@@ -526,13 +517,19 @@ const actions = {
             })
             .then(function(data){
                 context.name = data;
-    			console.log(context.name)
+                if (newUser) {
+                    context.newUser=true;
+                    newUser=false;
+                } else {
+                    context.existingUser=true;
+                }
+                console.log(context.newUser);
                 return resolve(context);
 			});
         })
     },
 
-
+    /*
     GettingToKnowJames({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
@@ -544,19 +541,62 @@ const actions = {
             });
         });
     },
-	
+	*/
+
 	askLocation({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
-        	console.log('askLocation function called');  
-        	typing(recipientId)
-            .then(function(data){
-                fbAskForLocation(recipientId);
-                return resolve(context);
-            });
+        	console.log('askLocation function called');
+            if (lat & long) {
+                // Run lat and long through to yelp api
+                const message = "this one can?";
+                recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
+            } else {
+                typing(recipientId)
+                .then(function(data){
+                    fbAskForLocation(recipientId,"...but where are you arh?");
+                    return resolve(context);
+                });
+            }
         });
     },
 
+    nextSuggestion({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('nextSuggestion function called');
+            nextRecommendChunk(recipientId);
+        });
+    },
+
+    changeExpensivePref({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('changeExpensivePref function called');
+            wantsLowPrice=true;
+            if (priceCeiling==1) {
+                fbMessage(sender,"Hmm, these are already the cheapest restaurants I have for you. Maybe I should start the search again?")
+                .then(function(data){
+                    fbRestartRecommend(sender);
+                });
+            } else {
+                priceRange=updatePriceRange(priceCeiling-1);
+                const message = "ok, i'll find cheaper ones. this one can?";
+                recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);   
+            }
+        });
+    },
+
+    changeOpenPref({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('changeExpensivePref function called');
+            wantsOpen=true;
+            const message = "Haha right. Here are some open ones.";
+            recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
+        });
+    }
+    /*
     Start({context, entities, sessionId}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;	
@@ -568,6 +608,7 @@ const actions = {
             })
         });
 	},
+    
 			 
     getFood({context, entities, sessionId}) {
         return new Promise(function(resolve, reject) {
@@ -596,6 +637,7 @@ const actions = {
             
         })
     }
+    */
 }
 
 // Currently not used!
@@ -1001,6 +1043,9 @@ const userSessionSchema = new schema({
 // Add model to mongoose
 const userSession = db.model('userSession', userSessionSchema);
 
+// Create variable store for newUsers
+var newUser = false;
+
 const addOrUpdateUser = (fbid,firstName) => {
     // if disconnected, reconnect
     console.log(status);
@@ -1020,6 +1065,7 @@ const addOrUpdateUser = (fbid,firstName) => {
             console.log("User session updated!");
         } else {
             console.log("User session created!");
+            newUser = true;
         }
     });
 }
@@ -1120,7 +1166,8 @@ app.post('/webhook', (req, res) => {
                                             fbRestartRecommend(sender);
                                         });
                                     } else {
-                                        priceRange = updatePriceRange(priceCeiling-1);   
+                                        priceRange = updatePriceRange(priceCeiling-1);
+                                        priceCeiling -= 1;
                                         const message = "Hmm, here are some cheaper alternatives.";
                                         recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
                                     }
