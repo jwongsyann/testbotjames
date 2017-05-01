@@ -57,12 +57,10 @@ if (!YELP_ID) { throw new Error('missing YELP_ID') }
 const YELP_SECRET = process.env.YELP_SECRET;
 if (!YELP_SECRET) { throw new Error('missing YELP_SECRET') }
 
-
-/*
 // Mongoose API parameters
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) { throw new Error('missing MONGODB_URI') }
-*/
+
 // ----------------------------------------------------------------------------
 // Facebook Messenger API specific code
 // ----------------------------------------------------------------------------
@@ -1017,7 +1015,7 @@ const nextRecommendChunk = (sender) => {
 // ----------------------------------------------------------------------------
 // Mongodb Codes
 // ----------------------------------------------------------------------------
-var db = mongoose.createConnection('mongodb://heroku_hq3t2972:2l84bugq42te0t69tq97h2qtvu@ds145370.mlab.com:45370/heroku_hq3t2972');
+var db = mongoose.createConnection(MONGODB_URI);
 var status;
 db.on('error', function(err){
     if(err) throw err;
