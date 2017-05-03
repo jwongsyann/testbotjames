@@ -589,6 +589,15 @@ const actions = {
             context.resName=jsonName[responseCounter];
             return resolve(context);
         });
+    },
+
+    endConvo({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('endConvo function called');
+            context.done = true;
+            return resolve(context);
+        });
     }
 }
 
@@ -1142,12 +1151,15 @@ app.post('/webhook', (req, res) => {
                                         // Based on the session state, you might want to reset the session.
                                         // This depends heavily on the business logic of your bot.
                                         // Example:
-                                        // if (context['done']) {
-                                        //   delete sessions[sessionId];
-                                        // }
+                                        if (context['done']) {
+                                            delete sessions[sessionId];
+                                            delete context;
+                                        }
 
                                         // Updating the user's current session state
-                                        sessions[sessionId].context = context;
+                                        if (context) {
+                                            sessions[sessionId].context = context;   
+                                        }
                                     })
                                     .catch((err) => {
                                         console.error('Oops! Got an error from Wit: ', err.stack || err);
