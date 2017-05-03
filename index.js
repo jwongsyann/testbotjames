@@ -1131,9 +1131,6 @@ app.post('/webhook', (req, res) => {
                                     const message = "Okie dokes, enlarging search area to 5 kilometers!";
                                     radius = 5000;
                                     recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
-                            } else if (text=="This is good! Thks!") {
-                                    // This part is to end off the conversation.
-                                    fbMessage(sender, "No problemo! Just share your location again in the future to restart this conversation! Alternatively, you could just type Hi :). A smiley face is also preferred.");
                             } else {
                                     // For all other text messages
                                     // Let's forward the message to the Wit.ai Bot Engine
