@@ -1151,9 +1151,10 @@ app.post('/webhook', (req, res) => {
                                         // Based on the session state, you might want to reset the session.
                                         // This depends heavily on the business logic of your bot.
                                         // Example:
-                                        if (context['done']) {
+                                        if (context.done) {
                                             delete sessions[sessionId];
                                             delete context.resName;
+                                            delete context.done;
                                             lat = "";
                                             long = "";
                                         }
