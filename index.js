@@ -260,7 +260,7 @@ const fbNextChoice = (id) => {
             },
             {
                 "content_type":"text",
-                "title":"This is good! Thks!",
+                "title":"no, this is good. tks",
                 "payload":"endConv" 
             }
             ]
