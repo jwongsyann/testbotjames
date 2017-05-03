@@ -1153,7 +1153,7 @@ app.post('/webhook', (req, res) => {
                                         // Example:
                                         if (context['done']) {
                                             delete sessions[sessionId];
-                                            delete context;
+                                            context = [];
                                         }
 
                                         // Updating the user's current session state
