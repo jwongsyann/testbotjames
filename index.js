@@ -318,7 +318,7 @@ const fbNextChoicePref = (id, pref) => {
         },
         {
             "content_type":"text",
-            "title":"This is good! Thks!",
+            "title":"no, this is good. tks",
             "payload":"endConv" 
         }
         ];
@@ -336,7 +336,7 @@ const fbNextChoicePref = (id, pref) => {
         },
         {
             "content_type":"text",
-            "title":"This is good! Thks!",
+            "title":"no, this is good. tks",
             "payload":"endConv" 
         }
         ];
@@ -354,7 +354,7 @@ const fbNextChoicePref = (id, pref) => {
         },
         {
             "content_type":"text",
-            "title":"This is good! Thks!",
+            "title":"no, this is good. tks",
             "payload":"endConv" 
         }
         ];
