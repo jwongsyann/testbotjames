@@ -131,7 +131,7 @@ const fbGoMessage = (id, message) => {
             [
             {
                 "content_type":"text",
-                "title":"Yah, so hungry!",
+                "title":"Yah, I'm hungry!",
                 "payload":"go"
             },
             {
@@ -527,20 +527,6 @@ const actions = {
         })
     },
 
-    /*
-    GettingToKnowJames({sessionId,context, entities}) {
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log('GTKJ function called');  
-            fbMessage(recipientId, "My name is James, but my friends call me foodie-James! I LOVE food, and I love sharing good food places with people!") 
-            .then(function(data){
-                fbMessage(recipientId, "Buzz me anytime if you need food recommendations! 👍🏻");	
-                return resolve(context);
-            });
-        });
-    },
-	*/
-
 	askLocation({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
@@ -593,60 +579,18 @@ const actions = {
             const message = "Haha right. Here are some open ones.";
             recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
         });
-    }
-    /*
-    Start({context, entities, sessionId}) {
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;	
-            console.log('Start function called...');
-            typing(recipientId)
-            .then(function(data){
-                fbGoMessage(recipientId,"Hungry arh 😋 ?");
-                return resolve(context);
-            })
-        });
-	},
-    
-			 
-    getFood({context, entities, sessionId}) {
+    },
+
+    saveResult({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
-            console.log('GetFood function called...');
-            
-            //define search parameters
-            var location = firstEntityValue(entities, "location") || context.location
-            var food = firstEntityValue(entities, "food") || context.food
-
-            if (!lat & !long) {
-                context.forecast
-            }
-            
-
-            if (lat & long) {
-                console.log("Hi :)");
-            } else {
-                typing(recipientId)
-                .then(function(data){
-                    if (lat & long) {
-                        fbAskForLocation(recipientId, "Where are you?");      
-                    }
-                })    
-            }
-            
-        })
+            console.log('saveResult function called');
+            addOrUpdateUserResult(recipientId,jsonName[responseCounter],jsonCat[responseCounter]);
+            context.resName=jsonName[responseCounter];
+            return resolve(context);
+        });
     }
-    */
 }
-
-// Currently not used!
-const search = (location, food, recipientId) => {	
-    console.log("Searching yelp");
-    //insert codes for yelp search and fb template here
-    const message = "I know where to get good " +food+" in "+location+"! Follow me!";
-    recommendChunk(recipientId, message,null,null,location,wantsOpen,priceRange, food, null,radius);
-    return context = {};
-    console.log('Reset context...');
-};
 
 // Setting up our bot
 const wit = new Wit({
@@ -1068,6 +1012,38 @@ const addOrUpdateUser = (fbid,firstName) => {
     });
 }
 
+const userSavedResultsSchema = new schema({
+    fbid : String,
+    resName: String,
+    resCategory: String
+});
+
+// Add model to mongoose
+const userSavedResults = db.model('userSavedResults', userSavedResultsSchema);
+
+const addOrUpdateUserResult = (fbid,resName,resCategory) => {
+    // if disconnected, reconnect
+    console.log(status);
+    if (status=="dead") {
+        db.open();
+    }
+    // Find user, otherwise save new user
+    // Setup stuff
+    var query = { fbid:fbid },
+        update = { fbid:fbid, resName: resName, resCategory:resCategory },
+        options = { upsert: true, returnNewDocument: true };
+
+    // Find the document
+    userSession.findOneAndUpdate(query, update, options, function(error, result) {
+        if (error) throw error;
+        if (result) {
+            console.log("User results updated!");
+        } else {
+            console.log("User results created!");
+        }
+    });
+}
+
 // ----------------------------------------------------------------------------
 // App Main Code Body
 // ----------------------------------------------------------------------------
@@ -1142,40 +1118,7 @@ app.post('/webhook', (req, res) => {
 						else if (text) {
                             // We received a text message
 							
-                            if (text=="Yah, so hungry!") {
-                                    // This part is for the beginning conversation!
-                                    typing(sender)
-                                    .then(function(data){
-                                        fbAskForLocation(sender,"where you?");    
-                                    });                                
-                            } else if (text=="Show me sth else.") {
-                                    nextRecommendChunk(sender);
-                            } else if (text=="Um.. it's closed...") {
-                                    wantsOpen = true;
-                                    responseCounter = 0;
-                                    const message = "Haha right. Here are some open ones.";
-                                    recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
-                            } else if (text=="so expensive!") {
-                                    wantsLowPrice = true;
-                                    responseCounter = 0; 
-                                    if (priceCeiling==1) {
-                                        fbMessage(sender,"Hmm, these are already the cheapest restaurants I have for you. Maybe I should start the search again?")
-                                        .then(function(data){
-                                            fbRestartRecommend(sender);
-                                        });
-                                    } else {
-                                        priceRange = updatePriceRange(priceCeiling-1);
-                                        priceCeiling -= 1;
-                                        const message = "Hmm, here are some cheaper alternatives.";
-                                        recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
-                                    }
-                            } else if (text=="Kinda badly rated no...") {
-                                    wantsHighRating = true;
-                                    responseCounter = 0;
-                                    sortBy = updateSortBy(wantsHighRating);
-                                    const message = "Hmm, got it. I've ranked the best results first now.";
-                                    recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
-                            } else if (text=="Enlarge search area") {
+                            if (text=="Enlarge search area") {
                                     const message = "Okie dokes, enlarging search area to 5 kilometers!";
                                     radius = 5000;
                                     recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
@@ -1238,22 +1181,13 @@ app.post('/webhook', (req, res) => {
                                 return requestUserName(sender);
                             })
                             .then(function(data){
-                                return fbMessage(sender,"Hi "+ data + ". My name James.");
+                                return fbMessage(sender,"Hi "+ data + ". My name is James.");
                             })
                             .then(function(data){
-                                return fbMessage(sender, "sometimes I always ask myself, why everyday I eat cai fan (mixed vegetable rice). ")
+                                return fbMessage(sender, "I can help you find places to eat near you.")
                             })
                             .then(function(data){
-                                return fbMessage(sender, "save money lor.")
-                            })
-                            .then(function(data){
-                                return fbMessage(sender, "But nehmind, James here help you find food.")
-                            })
-                            .then(function(data){
-                                return fbMessage(sender,"I actually alot also know one. If anytime need help say hello can already.");
-                            })
-                            .then(function(data){
-                                return fbGoMessage(sender,"You now hungry arh? Want eat or not?");
+                                return fbGoMessage(sender,"you looking for a place to eat?");
                             })
                             .catch(function(err){
                                 console.error(err);
