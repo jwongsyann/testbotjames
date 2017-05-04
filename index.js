@@ -583,6 +583,10 @@ const actions = {
                 // Run lat and long through to yelp api
                 const message = "this one can?";
                 recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
+            } else if () {
+                // Run location through to yelp api
+                const message = "this one can?";
+                recommendChunk(recipientId, message,null,null,location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
             } else {
                 typing(recipientId)
                 .then(function(data){
@@ -655,6 +659,18 @@ const actions = {
             const recipientId = sessions[sessionId].fbid;
             console.log('endConvo function called');
             context.done = true;
+            return resolve(context);
+        });
+    },
+
+    storeLocation({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('storeLocation function called');
+            const location = firstEntityValue(entities,'location');
+            if (location) {
+                context.location = location;
+            }
             return resolve(context);
         });
     }
