@@ -67,6 +67,7 @@ if (!MONGODB_URI) { throw new Error('missing MONGODB_URI') }
 // Save latitude and longitude to global for reuse for yelp api call
 var lat = '';
 var long = '';
+var location = '';
 
 // Intialize variables that we will save to global
 var responseCounter = 0; 
@@ -586,7 +587,7 @@ const actions = {
             } else if (location) {
                 // Run location through to yelp api
                 const message = "this one can?";
-                recommendChunk(recipientId, message,null,null,location+' hsingapore',wantsOpen,priceRange,null,sortBy,radius);
+                recommendChunk(recipientId, message,null,null,location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
             } else {
                 typing(recipientId)
                 .then(function(data){
@@ -667,7 +668,7 @@ const actions = {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('storeLocation function called');
-            const location = firstEntityValue(entities,'location');
+            location = firstEntityValue(entities,'location');
             if (location) {
                 context.location = location;
             }
