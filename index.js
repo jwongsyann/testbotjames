@@ -583,10 +583,10 @@ const actions = {
                 // Run lat and long through to yelp api
                 const message = "this one can?";
                 recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
-            } else if () {
+            } else if (location) {
                 // Run location through to yelp api
                 const message = "this one can?";
-                recommendChunk(recipientId, message,null,null,location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
+                recommendChunk(recipientId, message,null,null,location+' hsingapore',wantsOpen,priceRange,null,sortBy,radius);
             } else {
                 typing(recipientId)
                 .then(function(data){
