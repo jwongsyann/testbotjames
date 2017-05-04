@@ -102,6 +102,7 @@ var newUser = false;
 const resetParams = () => {
     lat = '';
     long = '';
+    location = '';
     responseCounter = 0;
     wantsOpen = false;
     wantsHighRating = false;
@@ -672,6 +673,16 @@ const actions = {
             if (location) {
                 context.location = location;
             }
+            return resolve(context);
+        });
+    },
+
+    deleteLocation({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('storeLocation function called');
+            location = '';
+            delete context.location;
             return resolve(context);
         });
     }
