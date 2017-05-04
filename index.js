@@ -670,6 +670,7 @@ const actions = {
             const recipientId = sessions[sessionId].fbid;
             console.log('storeLocation function called');
             location = firstEntityValue(entities,'location');
+            console.log(location);
             if (location) {
                 context.location = location;
             }
