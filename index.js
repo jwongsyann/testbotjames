@@ -62,6 +62,58 @@ const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) { throw new Error('missing MONGODB_URI') }
 
 // ----------------------------------------------------------------------------
+// Initialize all other parameters
+// ----------------------------------------------------------------------------
+// Save latitude and longitude to global for reuse for yelp api call
+var lat = '';
+var long = '';
+
+// Intialize variables that we will save to global
+var responseCounter = 0; 
+var jsonString = '';
+var jsonBiz = '';
+var jsonName = ''; 
+var jsonUrl = '';
+var jsonCat = '';
+var jsonImage = '';
+var jsonNumber = '';
+var jsonRating = '';
+var jsonMapLat = '';
+var jsonMapLong = '';
+var jsonId = '';
+var jsonPrice = '';
+var jsonIsOpenNow = '';
+
+// Save some preference parameters
+var wantsOpen = false;
+var wantsHighRating = false;
+var wantsLowPrice = false;
+var ratingFloor = 3;
+var priceCeiling = 4;
+var sortBy = null;
+var radius = 1000;
+var offset = 0;
+
+// Create variable to indicate newUsers for mongodb storage
+var newUser = false;
+
+// Need function to reset params after convo ends
+const resetParams = () => {
+    lat = '';
+    long = '';
+    responseCounter = 0;
+    wantsOpen = false;
+    wantsHighRating = false;
+    wantsLowPrice = false;
+    ratingFloor = 3;
+    priceCeiling = 4;
+    sortBy = null;
+    radius = 1000;
+    offset = 0;
+    newUser = false;
+}
+
+// ----------------------------------------------------------------------------
 // Facebook Messenger API specific code
 // ----------------------------------------------------------------------------
 // Function to get user's first name.
@@ -281,6 +333,7 @@ const fbNextChoice = (id) => {
     });
 };
 
+/* Not used unless we have quick replies from Wit.
 // Adapted FB function to send Wit messages and quick replies
 const fbWitMessage = (id, data) => {
     const body = JSON.stringify({
@@ -301,6 +354,7 @@ const fbWitMessage = (id, data) => {
         return json;
     });
 };
+*/
 
 // General FB quick replies for other suggestions that includes a handler for wantsOpen, wantsLowPrice, wantsHighRating
 const fbNextChoicePref = (id, pref) => {
@@ -417,10 +471,6 @@ const fbRestartRecommend = (id) => {
     });
 };
 
-// Save latitude and longitude to global for reuse for yelp api call
-var lat = '';
-var long = '';
-
 // ----------------------------------------------------------------------------
 // Wit.ai bot specific code
 // ----------------------------------------------------------------------------
@@ -521,7 +571,6 @@ const actions = {
                 } else {
                     context.existingUser=true;
                 }
-                console.log(context.newUser);
                 return resolve(context);
 			});
         })
@@ -581,6 +630,16 @@ const actions = {
         });
     },
 
+    changeRatingPref({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('changeRatingPref function called');
+            wantsHighRating=true;
+            const message = "Haha right. I'll give you the better ones first.";
+            recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
+        });
+    },
+
     saveResult({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
@@ -618,22 +677,6 @@ var yelp = new Yelp({
 
 // use different package for Biz search
 var yelpBiz = new YelpBiz({ id: YELP_ID, secret: YELP_SECRET});
-
-// Intialize variables that we will save to global
-var responseCounter = 0; //Initialize the responseCounter
-var jsonString = '';
-var jsonBiz = '';
-var jsonName = ''; 
-var jsonUrl = '';
-var jsonCat = '';
-var jsonImage = '';
-var jsonNumber = '';
-var jsonRating = '';
-var jsonMapLat = '';
-var jsonMapLong = '';
-var jsonId = '';
-var jsonPrice = '';
-var jsonIsOpenNow = '';
 
 // Create function to save yelp search output
 const saveYelpSearchOutput = (data) => {
@@ -720,17 +763,6 @@ const saveYelpBusinessOutput = (data) => {
     return resObj;
 };
 
-
-// Save some preference parameters
-var wantsOpen = false;
-var wantsHighRating = false;
-var wantsLowPrice = false;
-var ratingFloor = 3;
-var priceCeiling = 4;
-var sortBy = null;
-var radius = 1000;
-var offset = 0;
-
 const updatePriceRange = (data) => {
     var res = "";
     switch (data) {
@@ -815,7 +847,7 @@ const shuffleYelp = (array) => {
 
 // ----------------------------------------------------------------------------
 // Create standard conversation chunks
-
+// ----------------------------------------------------------------------------
 const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,food,sortBy,radius) => {
     if (!food) {
         food = "";
@@ -994,9 +1026,6 @@ const userSessionSchema = new schema({
 // Add model to mongoose
 const userSession = db.model('userSession', userSessionSchema);
 
-// Create variable store for newUsers
-var newUser = false;
-
 const addOrUpdateUser = (fbid,firstName) => {
     // if disconnected, reconnect
     console.log(status);
@@ -1154,8 +1183,7 @@ app.post('/webhook', (req, res) => {
                                             delete sessions[sessionId];
                                             delete context.resName;
                                             delete context.done;
-                                            lat = "";
-                                            long = "";
+                                            resetParams();
                                         } else {
                                             // Updating the user's current session state
                                             sessions[sessionId].context = context;
