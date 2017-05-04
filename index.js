@@ -333,7 +333,6 @@ const fbNextChoice = (id) => {
     });
 };
 
-/* Not used unless we have quick replies from Wit.
 // Adapted FB function to send Wit messages and quick replies
 const fbWitMessage = (id, data) => {
     const body = JSON.stringify({
@@ -354,7 +353,7 @@ const fbWitMessage = (id, data) => {
         return json;
     });
 };
-*/
+
 
 // General FB quick replies for other suggestions that includes a handler for wantsOpen, wantsLowPrice, wantsHighRating
 const fbNextChoicePref = (id, pref) => {
