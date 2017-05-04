@@ -634,6 +634,7 @@ const actions = {
             const recipientId = sessions[sessionId].fbid;
             console.log('changeRatingPref function called');
             wantsHighRating=true;
+            sortBy = updateSortBy(true);
             const message = "Haha right. I'll give you the better ones first.";
             recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
         });
