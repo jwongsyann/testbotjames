@@ -676,6 +676,7 @@ const actions = {
                 context.location = location;
             } else if (message_body) {
                 context.location = message_body;
+                location = context.location;
             }
             return resolve(context);
         });
