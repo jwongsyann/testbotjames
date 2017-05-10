@@ -670,12 +670,11 @@ const actions = {
             const recipientId = sessions[sessionId].fbid;
             console.log('storeLocation function called');
             location = firstEntityValue(entities,'location');
-            catchAll = firstEntityValue(entities,'catchAll');
-            console.log(catchAll);
+            message_body = firstEntityValue(entities,'message_body');
             if (location) {
                 context.location = location;
-            } else if (catchAll) {
-                context.location = firstEntityValue(entities,'message_body');
+            } else if (message_body) {
+                context.location = message_body;
             }
             return resolve(context);
         });
