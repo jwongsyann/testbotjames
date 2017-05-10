@@ -1212,7 +1212,6 @@ app.post('/webhook', (req, res) => {
                                         // Example:
 
                                         if (context.done) {
-                                            console.log("This code runs");
                                             delete sessions[sessionId];
                                             delete context.resName;
                                             delete context.done;
