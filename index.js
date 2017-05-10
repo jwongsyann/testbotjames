@@ -670,7 +670,8 @@ const actions = {
             const recipientId = sessions[sessionId].fbid;
             console.log('storeLocation function called');
             location = firstEntityValue(entities,'location');
-            message_body = firstEntityValue(entities,'message_body');
+            const message_body = firstEntityValue(entities,'message_body');
+            console.log(message_body);
             if (location) {
                 context.location = location;
             } else if (message_body) {
@@ -680,7 +681,7 @@ const actions = {
         });
     },
 
-    deleteLocation({sessionId,context, entities}) {
+    deleteLocation({sessionId,context,entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('storeLocation function called');
