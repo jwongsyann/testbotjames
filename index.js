@@ -894,9 +894,9 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
     })
     .then(function (data) {
         if (lat&long) {
-                return yelp.search({term: food+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, offset: offset*30, limit: 30});
+                return yelp.search({term: food+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, offset: offset*50, limit: 50});
         } else if (location) {
-                return yelp.search({term: food+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy, radius: radius, offset: offset*30, limit: 30});
+                return yelp.search({term: food+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy, radius: radius, offset: offset*50, limit: 50});
         }
     })
     .then(function (data) {
@@ -963,6 +963,7 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
     })                                                        
     .catch(function (err) {
         console.error(err);
+        fbMessage("Whoops! Something went wrong. Try again please!");
     });
 }
 
