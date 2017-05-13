@@ -899,6 +899,10 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
                 return yelp.search({term: food+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy, radius: radius, offset: offset*50, limit: 50});
         }
     })
+    .catch(function (err) {
+        console.log(err);
+        fbMessage("Whoops! Something went wrong. Try again please!");
+    })
     .then(function (data) {
         saveYelpSearchOutput(data);
     })
@@ -963,7 +967,6 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
     })                                                        
     .catch(function (err) {
         console.error(err);
-        fbMessage("Whoops! Something went wrong. Try again please!");
     });
 }
 
