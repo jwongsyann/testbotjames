@@ -304,7 +304,7 @@ const fbNextChoice = (id) => {
     const body = JSON.stringify({
         recipient: {id},
         message: {
-            text:"Or would you like a different suggestion?",
+            text:"Can or not?",
             quick_replies: 
             [
             {
@@ -314,7 +314,7 @@ const fbNextChoice = (id) => {
             },
             {
                 "content_type":"text",
-                "title":"no, this is good. tks",
+                "title":"can",
                 "payload":"endConv" 
             }
             ]
@@ -373,7 +373,7 @@ const fbNextChoicePref = (id, pref) => {
         },
         {
             "content_type":"text",
-            "title":"no, this is good. tks",
+            "title":"can",
             "payload":"endConv" 
         }
         ];
@@ -391,7 +391,7 @@ const fbNextChoicePref = (id, pref) => {
         },
         {
             "content_type":"text",
-            "title":"no, this is good. tks",
+            "title":"can",
             "payload":"endConv" 
         }
         ];
@@ -409,7 +409,7 @@ const fbNextChoicePref = (id, pref) => {
         },
         {
             "content_type":"text",
-            "title":"no, this is good. tks",
+            "title":"can",
             "payload":"endConv" 
         }
         ];
@@ -417,7 +417,7 @@ const fbNextChoicePref = (id, pref) => {
     const body = JSON.stringify({
         recipient: {id},
         message: {
-            text:"Or would you like a different suggestion?",
+            text:"Can or not?",
             quick_replies: quick_replies
         }
     });
