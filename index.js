@@ -583,11 +583,11 @@ const actions = {
         	console.log('askLocation function called');
             if (lat & long) {
                 // Run lat and long through to yelp api
-                const message = "this one can?";
+                const message = "how about this?";
                 recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
             } else if (location) {
                 // Run location through to yelp api
-                const message = "this one can?";
+                const message = "how about this?";
                 recommendChunk(recipientId, message,null,null,location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
             } else {
                 typing(recipientId)
@@ -619,7 +619,7 @@ const actions = {
                 });
             } else {
                 priceRange=updatePriceRange(priceCeiling-1);
-                const message = "ok, i'll find cheaper ones. this one can?";
+                const message = "ok, i'll find cheaper ones. How about this?";
                 recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);   
             }
         });
@@ -1180,7 +1180,7 @@ app.post('/webhook', (req, res) => {
                                 long = attachments[0].payload.coordinates.long;
 
                                 // Run lat and long through to yelp api
-                                const message = "this one can?"
+                                const message = "How about this?"
                                 recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
                                                         
                             } else {
