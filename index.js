@@ -185,13 +185,8 @@ const fbGoMessage = (id, message) => {
             [
             {
                 "content_type":"text",
-                "title":"Yah, I'm hungry!",
+                "title":"Hi!",
                 "payload":"go"
-            },
-            {
-                "content_type":"text",
-                "title":"Who are you?",
-                "payload":"go" 
             }
             ]
         }
@@ -1198,10 +1193,7 @@ app.post('/webhook', (req, res) => {
                                     // We retrieve the user's current session, or create one if it doesn't exist
                                     // This is needed for our bot to figure out the conversation history
                                     const sessionId = findOrCreateSession(sender);
-
-                                    if (sessions[sessionId].context.done) {
-                                        console.log("this code runs!");
-                                    }
+                                    console.log(sessions[sessionId].context);
 
                                     // For all other text messages
                                     // Let's forward the message to the Wit.ai Bot Engine
@@ -1215,7 +1207,7 @@ app.post('/webhook', (req, res) => {
                                         // Our bot did everything it has to do.
                                         // Now it's waiting for further messages to proceed.
                                         console.log('Waiting for next user messages');
-                                        console.log(context);
+
                                         // Based on the session state, you might want to reset the session.
                                         // This depends heavily on the business logic of your bot.
                                         // Example:
@@ -1260,10 +1252,7 @@ app.post('/webhook', (req, res) => {
                                 return fbMessage(sender,"Hi "+ data + ". My name is James.");
                             })
                             .then(function(data){
-                                return fbMessage(sender, "I can help you find places to eat near you.")
-                            })
-                            .then(function(data){
-                                return fbGoMessage(sender,"you looking for a place to eat?");
+                                return fbGoMessage(sender,"I can help you find places to eat near you.");
                             })
                             .catch(function(err){
                                 console.error(err);
