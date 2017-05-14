@@ -1163,10 +1163,6 @@ app.post('/webhook', (req, res) => {
                             addOrUpdateUser(sender,data);
                         });
 
-                        // We retrieve the user's current session, or create one if it doesn't exist
-                        // This is needed for our bot to figure out the conversation history
-                        const sessionId = findOrCreateSession(sender);
-
                         // We retrieve the message content
                         const {text, attachments} = event.message;
 
@@ -1198,6 +1194,15 @@ app.post('/webhook', (req, res) => {
                                     radius = 5000;
                                     recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
                             } else {
+
+                                    // We retrieve the user's current session, or create one if it doesn't exist
+                                    // This is needed for our bot to figure out the conversation history
+                                    const sessionId = findOrCreateSession(sender);
+
+                                    if (sessions[sessionId].context.done) {
+                                        console.log("this code runs!");
+                                    }
+
                                     // For all other text messages
                                     // Let's forward the message to the Wit.ai Bot Engine
                                     // This will run all actions until our bot has nothing left to do
@@ -1234,12 +1239,6 @@ app.post('/webhook', (req, res) => {
                     } else if (event.postback) {
                         // This is to handle postbacks from cards
                         const sender = event.sender.id;
-
-                        console.log(sender);
-
-                        // We retrieve the user's current session, or create one if it doesn't exist
-                        // This is needed for our bot to figure out the conversation history
-                        const sessionId = findOrCreateSession(sender);
 
                         // Store text from payload
                         let text = JSON.stringify(event.postback.payload);
