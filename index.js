@@ -694,6 +694,15 @@ const actions = {
             responseCounter = 0;
             return resolve(context);
         });
+    },
+
+    enlargeSearch({sessionId,context,entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('enlargeSearch function called');
+            radius = 5000;
+            return resolve(context);
+        });
     }
 }
 
@@ -1195,50 +1204,44 @@ app.post('/webhook', (req, res) => {
                         } 
 						else if (text) {
                             // We received a text message
-							
-                            if (text=="Enlarge search area") {
-                                    const message = "Okie dokes, enlarging search area to 5 kilometers!";
-                                    radius = 5000;
-                                    recommendChunk(sender,message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
-                            } else {
 
-                                    // We retrieve the user's current session, or create one if it doesn't exist
-                                    // This is needed for our bot to figure out the conversation history
-                                    const sessionId = findOrCreateSession(sender);
-                                    console.log(sessions[sessionId].context);
+                            // We retrieve the user's current session, or create one if it doesn't exist
+                            // This is needed for our bot to figure out the conversation history
+                            const sessionId = findOrCreateSession(sender);
+                            console.log(sessions[sessionId].context);
 
-                                    // For all other text messages
-                                    // Let's forward the message to the Wit.ai Bot Engine
-                                    // This will run all actions until our bot has nothing left to do
-                                    wit.runActions(
-                                            sessionId, // the user's current session
-                                            text, // the user's message
-                                            sessions[sessionId].context // the user's current session state
-                                    )
-                                    .then((context) => {
-                                        // Our bot did everything it has to do.
-                                        // Now it's waiting for further messages to proceed.
-                                        console.log('Waiting for next user messages');
+                            // For all other text messages
+                            // Let's forward the message to the Wit.ai Bot Engine
+                            // This will run all actions until our bot has nothing left to do
+                            wit.runActions(
+                                    sessionId, // the user's current session
+                                    text, // the user's message
+                                    sessions[sessionId].context // the user's current session state
+                            )
+                            .then((context) => {
+                                // Our bot did everything it has to do.
+                                // Now it's waiting for further messages to proceed.
+                                console.log('Waiting for next user messages');
 
-                                        // Based on the session state, you might want to reset the session.
-                                        // This depends heavily on the business logic of your bot.
-                                        // Example:
+                                // Based on the session state, you might want to reset the session.
+                                // This depends heavily on the business logic of your bot.
+                                // Example:
 
-                                        if (context.done) {
-                                            delete sessions[sessionId];
-                                            delete context.resName;
-                                            delete context.done;
-                                            resetParams();
-                                        } else {
-                                            // Updating the user's current session state
-                                            sessions[sessionId].context = context;
-                                        }
-                                        
-                                    })
-                                    .catch((err) => {
-                                        console.error('Oops! Got an error from Wit: ', err.stack || err);
-                                    })                                      
-                            }
+                                if (context.done) {
+                                    delete sessions[sessionId];
+                                    delete context.resName;
+                                    delete context.done;
+                                    resetParams();
+                                } else {
+                                    // Updating the user's current session state
+                                    sessions[sessionId].context = context;
+                                }
+                                
+                            })
+                            .catch((err) => {
+                                console.error('Oops! Got an error from Wit: ', err.stack || err);
+                            })                                      
+                            
                         }
                     } else if (event.postback) {
                         // This is to handle postbacks from cards
