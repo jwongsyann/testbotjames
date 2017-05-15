@@ -685,6 +685,15 @@ const actions = {
             delete context.location;
             return resolve(context);
         });
+    },
+
+    restartRecommend({sessionId,context,entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('restartRecommend function called');
+            responseCounter = 0;
+            return resolve(context);
+        });
     }
 }
 
