@@ -441,7 +441,7 @@ const fbRestartRecommend = (id) => {
             [
             {
                 "content_type":"text",
-                "title":"Okay.",
+                "title":"Back to first!",
                 "payload":"restartRecommend"
             },
             {
