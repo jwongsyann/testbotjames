@@ -929,7 +929,10 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
                 console.log(responseCounter);
         }
         */
-        while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 || jsonCat[responseCounter].indexOf("Convenience")!=-1 || jsonCat[responseCounter].indexOf("Grocery")!=-1) {
+        while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
+            || jsonCat[responseCounter].indexOf("Convenience")!=-1 
+            || jsonCat[responseCounter].indexOf("Grocery")!=-1
+            || jsonCat[responseCounter].indexOf("Grocer")!=-1) {
             responseCounter += 1;
         }
         if (responseCounter >= jsonName.length) {
