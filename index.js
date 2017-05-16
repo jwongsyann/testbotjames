@@ -545,7 +545,7 @@ const actions = {
     // You should implement your custom actions here
     // See https://wit.ai/docs/quickstart
     //
-    greetings({sessionId, context, entities}) {
+    saveName({sessionId, context, entities}) {
         return new Promise(function(resolve,reject) {
             const recipientId = sessions[sessionId].fbid;
 
@@ -688,6 +688,7 @@ const actions = {
             console.log('deleteLocation function called');
             location = '';
             delete context.location;
+            delete context.sentReqLoc;
             return resolve(context);
         });
     },
@@ -1220,11 +1221,11 @@ app.post('/webhook', (req, res) => {
                                 sessions[sessionId].context.lat = lat;
                                 sessions[sessionId].context.long = long;
                                 
-                                /*
+                                
                                 // Run lat and long through to yelp api
                                 const message = "How about this?"
                                 recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
-                                */
+                                sessions[sessionId].context.recommendGiven = true;
                                                       
                             } else {
                                 // Let's reply with an automatic message
