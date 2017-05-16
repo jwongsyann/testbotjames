@@ -588,6 +588,9 @@ const actions = {
                 typing(recipientId)
                 .then(function(data){
                     fbAskForLocation(recipientId,"...but where are you arh?");
+                })
+                .then(function(data){
+                    context.sentReqLoc = true;
                     return resolve(context);
                 });
             }
