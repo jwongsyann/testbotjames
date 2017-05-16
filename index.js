@@ -591,9 +591,9 @@ const actions = {
                 })
                 .then(function(data){
                     context.sentReqLoc = true;
-                    return resolve(context);
                 });
             }
+            return resolve(context);
         });
     },
 
@@ -672,9 +672,11 @@ const actions = {
             console.log(message_body);
             if (location) {
                 context.location = location;
-            } else if (message_body) {
-                context.location = message_body;
-                location = context.location;
+            } else if (lat && long) {
+                context.lat = lat;
+                context.long = long;
+            } else {
+                context.missingLocation = true;
             }
             return resolve(context);
         });
@@ -683,7 +685,7 @@ const actions = {
     deleteLocation({sessionId,context,entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
-            console.log('storeLocation function called');
+            console.log('deleteLocation function called');
             location = '';
             delete context.location;
             return resolve(context);
@@ -708,16 +710,20 @@ const actions = {
         });
     },
 
-    storeCoords({sessionId,context,entities}) {
+    giveRecommend({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
-            console.log('storeCoords function called');
-            if (lat && long) {
-                context.lat = lat;
-                context.long = long;
-            } else {
-                context.missingCoords = true;
+            console.log('askLocation function called');
+            if (lat & long) {
+                // Run lat and long through to yelp api
+                const message = "how about this?";
+                recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
+            } else if (location) {
+                // Run location through to yelp api
+                const message = "how about this?";
+                recommendChunk(recipientId, message,null,null,location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
             }
+            context.recommendGiven = true;
             return resolve(context);
         });
     }
@@ -1200,6 +1206,10 @@ app.post('/webhook', (req, res) => {
                         const {text, attachments} = event.message;
 
                         if (attachments) {
+
+                            // Need to initialize user session id to update wit context
+                            const sessionId = findOrCreateSession(sender);
+
                             // We received an attachment
                             // First need to identify if attachment was a shared location
                             if (attachments[0].type=="location") {
@@ -1207,12 +1217,15 @@ app.post('/webhook', (req, res) => {
                                 // Save lat and long
                                 lat = attachments[0].payload.coordinates.lat;
                                 long = attachments[0].payload.coordinates.long;
-
+                                sessions[sessionId].context.lat = lat;
+                                sessions[sessionId].context.long = long;
+                                
                                 /*
                                 // Run lat and long through to yelp api
                                 const message = "How about this?"
                                 recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
-                                */                      
+                                */
+                                                      
                             } else {
                                 // Let's reply with an automatic message
                                 fbMessage(sender, "C'mon, I'm just a bot. I won't understand random attachments...")
