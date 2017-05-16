@@ -703,6 +703,20 @@ const actions = {
             radius = 5000;
             return resolve(context);
         });
+    },
+
+    storeCoords({sessionId,context,entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('storeCoords function called');
+            if (lat && long) {
+                context.lat = lat;
+                context.long = long;
+            } else {
+                context.missingCoords = true;
+            }
+            return resolve(context);
+        });
     }
 }
 
@@ -1191,10 +1205,11 @@ app.post('/webhook', (req, res) => {
                                 lat = attachments[0].payload.coordinates.lat;
                                 long = attachments[0].payload.coordinates.long;
 
+                                /*
                                 // Run lat and long through to yelp api
                                 const message = "How about this?"
                                 recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
-                                                        
+                                */                      
                             } else {
                                 // Let's reply with an automatic message
                                 fbMessage(sender, "C'mon, I'm just a bot. I won't understand random attachments...")
