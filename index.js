@@ -583,7 +583,7 @@ const actions = {
             console.log('checkLocation function called');
             lat = firstEntityValue(entities,'lat');
             long = firstEntityValue(entities,'long');
-            location = firstEntityValue(entites,'location');
+            location = firstEntityValue(entities,'location');
             if (lat & long) {
                 context.lat = lat;
                 context.long = long;
