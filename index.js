@@ -185,7 +185,12 @@ const fbGoMessage = (id, message) => {
             [
             {
                 "content_type":"text",
-                "title":"Hi!",
+                "title":"Yes",
+                "payload":"go"
+            },
+            {
+                "content_type":"text",
+                "title":"No",
                 "payload":"go"
             }
             ]
@@ -572,32 +577,100 @@ const actions = {
         })
     },
 
-	askLocation({sessionId,context, entities}) {
+    checkLocation({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
-        	console.log('askLocation function called');
+            console.log('checkLocation function called');
             if (lat & long) {
-                // Run lat and long through to yelp api
-                const message = "how about this?";
-                recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
+                context.lat = lat;
+                context.long = long;
+                delete context.location;
+                delete context.missingLocation;
             } else if (location) {
-                // Run location through to yelp api
-                const message = "how about this?";
-                recommendChunk(recipientId, message,null,null,location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
+                context.location = location;
+                delete context.lat;
+                delete context.long;
+                delete context.missingLocation;
             } else {
-                typing(recipientId)
-                .then(function(data){
-                    fbAskForLocation(recipientId,"...but where are you arh?");
-                })
-                .then(function(data){
-                    context.sentReqLoc = true;
-                });
+                context.missingLocation = true;
+                delete context.lat;
+                delete context.long;
+                delete context.location;
             }
             return resolve(context);
         });
     },
 
-    nextSuggestion({sessionId,context, entities}) {
+	askLocation({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+        	console.log('askLocation function called');
+            
+            typing(recipientId)
+            .then(function(data){
+                fbAskForLocation(recipientId,"Use the facebook location share button below or type your location in!");
+            })
+            .catch(function(err) {
+                console.error(err);
+            })
+            
+            return resolve(context);
+        });
+    },
+
+    saveLocation({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('saveLocation function called');
+            location = firstEntityValue(entities,'location');
+            const message_body = firstEntityValue(entities,'message_body');
+            console.log(message_body);
+            if (location) {
+                context.location = location;
+            }
+            return resolve(context);
+        });
+    },
+    
+    deleteLocation({sessionId,context,entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('deleteLocation function called');
+            location = '';
+            delete context.location;
+            return resolve(context);
+        });
+    },
+
+    giveRec({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('giveRec function called');
+            if (context.lat & context.long) {
+                // Run lat and long through to yelp api
+                const message = "how about this?";
+                recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius);
+            } else if (context.location) {
+                // Run location through to yelp api
+                const message = "how about this?";
+                recommendChunk(recipientId, message,null,null,context.location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
+            }
+            context.recGiven = true;
+            return resolve(context);
+        });
+    },
+
+    saveResult({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('saveResult function called');
+            addOrUpdateUserResult(recipientId,jsonName[responseCounter],jsonCat[responseCounter]);
+            context.resName=jsonName[responseCounter];
+            return resolve(context);
+        });
+    },
+
+    nextRec({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('nextSuggestion function called');
@@ -643,17 +716,7 @@ const actions = {
             recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
         });
     },
-
-    saveResult({sessionId,context, entities}) {
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log('saveResult function called');
-            addOrUpdateUserResult(recipientId,jsonName[responseCounter],jsonCat[responseCounter]);
-            context.resName=jsonName[responseCounter];
-            return resolve(context);
-        });
-    },
-
+    
     endConvo({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
@@ -663,35 +726,6 @@ const actions = {
         });
     },
 
-    storeLocation({sessionId,context, entities}) {
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log('storeLocation function called');
-            location = firstEntityValue(entities,'location');
-            const message_body = firstEntityValue(entities,'message_body');
-            console.log(message_body);
-            if (location) {
-                context.location = location;
-            } else if (lat && long) {
-                context.lat = lat;
-                context.long = long;
-            } else {
-                context.missingLocation = true;
-            }
-            return resolve(context);
-        });
-    },
-
-    deleteLocation({sessionId,context,entities}) {
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log('deleteLocation function called');
-            location = '';
-            delete context.location;
-            delete context.sentReqLoc;
-            return resolve(context);
-        });
-    },
 
     restartRecommend({sessionId,context,entities}) {
         return new Promise(function(resolve, reject) {
@@ -707,24 +741,6 @@ const actions = {
             const recipientId = sessions[sessionId].fbid;
             console.log('enlargeSearch function called');
             radius = 5000;
-            return resolve(context);
-        });
-    },
-
-    giveRecommend({sessionId,context, entities}) {
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log('askLocation function called');
-            if (lat & long) {
-                // Run lat and long through to yelp api
-                const message = "how about this?";
-                recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
-            } else if (location) {
-                // Run location through to yelp api
-                const message = "how about this?";
-                recommendChunk(recipientId, message,null,null,location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
-            }
-            context.recommendGiven = true;
             return resolve(context);
         });
     }
@@ -1218,15 +1234,14 @@ app.post('/webhook', (req, res) => {
                                 // Save lat and long
                                 lat = attachments[0].payload.coordinates.lat;
                                 long = attachments[0].payload.coordinates.long;
-                                sessions[sessionId].context.lat = lat;
-                                sessions[sessionId].context.long = long;
                                 
-                                
+                                fbGoMessage(sender,"Ok, ready to start?");
+                                /*                                
                                 // Run lat and long through to yelp api
                                 const message = "How about this?"
                                 recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
                                 sessions[sessionId].context.recommendGiven = true;
-                                                      
+                                */                      
                             } else {
                                 // Let's reply with an automatic message
                                 fbMessage(sender, "C'mon, I'm just a bot. I won't understand random attachments...")
