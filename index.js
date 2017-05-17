@@ -584,6 +584,9 @@ const actions = {
             lat = firstEntityValue(entities,'lat');
             long = firstEntityValue(entities,'long');
             location = firstEntityValue(entities,'location');
+            console.log(lat);
+            console.log(long);
+            console.log(location);
             if (lat & long) {
                 context.lat = lat;
                 context.long = long;
@@ -600,6 +603,9 @@ const actions = {
                 delete context.long;
                 delete context.location;
             }
+            console.log(context.lat);
+            console.log(context.long);
+            console.log(context.location);
             return resolve(context);
         });
     },
