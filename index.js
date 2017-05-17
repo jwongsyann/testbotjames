@@ -581,9 +581,6 @@ const actions = {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('checkLocation function called');
-            lat = firstEntityValue(entities,'lat');
-            long = firstEntityValue(entities,'long');
-            location = firstEntityValue(entities,'location');
             console.log(lat);
             console.log(long);
             console.log(location);
@@ -603,9 +600,6 @@ const actions = {
                 delete context.long;
                 delete context.location;
             }
-            console.log(context.lat);
-            console.log(context.long);
-            console.log(context.location);
             return resolve(context);
         });
     },
@@ -1243,6 +1237,7 @@ app.post('/webhook', (req, res) => {
                                 // Save lat and long
                                 lat = attachments[0].payload.coordinates.lat;
                                 long = attachments[0].payload.coordinates.long;
+                                console.log('received coords:'+"lat:"+lat+"&long:"+long);
                                 
                                 fbGoMessage(sender,"Ok, ready to start?");
                                 /*                                
