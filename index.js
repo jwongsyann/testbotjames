@@ -581,6 +581,9 @@ const actions = {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('checkLocation function called');
+            lat = firstEntityValue(entities,'lat');
+            long = firstEntityValue(entities,'long');
+            location = firstEntityValue(entites,'location');
             if (lat & long) {
                 context.lat = lat;
                 context.long = long;
@@ -716,7 +719,7 @@ const actions = {
             recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
         });
     },
-    
+
     endConvo({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
