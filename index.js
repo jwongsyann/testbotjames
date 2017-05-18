@@ -672,13 +672,13 @@ const actions = {
 
             if (!exceedResNo) {
                 if (jsonIsOpenNow=="Closed.") {
-                    fbNextChoicePref(sender,"wantsOpen");
+                    fbNextChoicePref(recipientId,"wantsOpen");
                 } else if (jsonPrice[responseCounter]>=priceCeiling) {
-                    fbNextChoicePref(sender,"wantsLowPrice")
+                    fbNextChoicePref(recipientId,"wantsLowPrice")
                 } else if (jsonRating[responseCounter]<=ratingFloor) {
-                    fbNextChoicePref(sender,"wantsHighRating")
+                    fbNextChoicePref(recipientId,"wantsHighRating")
                 } else {
-                    fbNextChoice(sender);
+                    fbNextChoice(recipientId);
                 }
             }
             return resolve(context);
