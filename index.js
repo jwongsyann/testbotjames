@@ -654,14 +654,20 @@ const actions = {
             if (context.lat & context.long) {
                 // Run lat and long through to yelp api
                 const message = "how about this?";
-                recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius);
+                recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius)
+                .then(function(data) {
+                    context.recGiven=true;
+                    return resolve(context);
+                });
             } else if (context.location) {
                 // Run location through to yelp api
                 const message = "how about this?";
-                recommendChunk(recipientId, message,null,null,context.location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
+                recommendChunk(recipientId, message,null,null,context.location+' singapore',wantsOpen,priceRange,null,sortBy,radius)
+                .then(function(data){
+                    context.recGiven=true;
+                    return resolve(context);
+                });
             }
-            context.recGiven = true;
-            return resolve(context);
         });
     },
 
