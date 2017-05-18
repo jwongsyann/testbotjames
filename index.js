@@ -375,7 +375,7 @@ const fbNextChoicePref = (id, pref) => {
         },
         {
             "content_type":"text",
-            "title":"can",
+            "title":"Can",
             "payload":"endConv" 
         }
         ];
@@ -393,7 +393,7 @@ const fbNextChoicePref = (id, pref) => {
         },
         {
             "content_type":"text",
-            "title":"can",
+            "title":"Can",
             "payload":"endConv" 
         }
         ];
@@ -411,7 +411,7 @@ const fbNextChoicePref = (id, pref) => {
         },
         {
             "content_type":"text",
-            "title":"can",
+            "title":"Can",
             "payload":"endConv" 
         }
         ];
@@ -661,6 +661,26 @@ const actions = {
                 recommendChunk(recipientId, message,null,null,context.location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
             }
             context.recGiven = true;
+            return resolve(context);
+        });
+    },
+
+    checkForUserPref({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('checkForUserPref function called');
+
+            if (!exceedResNo) {
+                if (jsonIsOpenNow=="Closed.") {
+                    fbNextChoicePref(sender,"wantsOpen");
+                } else if (jsonPrice[responseCounter]>=priceCeiling) {
+                    fbNextChoicePref(sender,"wantsLowPrice")
+                } else if (jsonRating[responseCounter]<=ratingFloor) {
+                    fbNextChoicePref(sender,"wantsHighRating")
+                } else {
+                    fbNextChoice(sender);
+                }
+            }
             return resolve(context);
         });
     },
@@ -996,20 +1016,7 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
                 jsonPrice[responseCounter]
             );    
         }
-    })
-    .then(function (data) {
-        if (!exceedResNo) {
-            if (jsonIsOpenNow=="Closed.") {
-                fbNextChoicePref(sender,"wantsOpen");
-            } else if (jsonPrice[responseCounter]>=priceCeiling) {
-                fbNextChoicePref(sender,"wantsLowPrice")
-            } else if (jsonRating[responseCounter]<=ratingFloor) {
-                fbNextChoicePref(sender,"wantsHighRating")
-            } else {
-                fbNextChoice(sender);
-            }
-        }
-    })                                                        
+    })                                                     
     .catch(function (err) {
         console.error(err);
     });
@@ -1060,17 +1067,6 @@ const nextRecommendChunk = (sender) => {
                     jsonIsOpenNow,
                     jsonPrice[responseCounter]
                     )
-            })
-            .then(function (data) {
-                if (jsonIsOpenNow=="Closed.") {
-                    fbNextChoicePref(sender,"wantsOpen");
-                } else if (jsonPrice[responseCounter]>=priceCeiling) {
-                    fbNextChoicePref(sender,"wantsLowPrice")
-                } else if (jsonRating[responseCounter]<=ratingFloor) {
-                    fbNextChoicePref(sender,"wantsHighRating")
-                } else {
-                    fbNextChoice(sender);
-                }
             })
             .catch(function(err) {
                 console.error(err);
