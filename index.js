@@ -71,6 +71,7 @@ var location = '';
 
 // Intialize variables that we will save to global
 var responseCounter = 0; 
+var exceedResNo = false;
 var jsonString = '';
 var jsonBiz = '';
 var jsonName = ''; 
@@ -104,6 +105,7 @@ const resetParams = () => {
     long = '';
     location = '';
     responseCounter = 0;
+    exceedResNo = false;
     wantsOpen = false;
     wantsHighRating = false;
     wantsLowPrice = false;
@@ -955,10 +957,6 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
                 return yelp.search({term: food+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy, radius: radius, offset: offset*50, limit: 50});
         }
     })
-    .catch(function (err) {
-        console.log(err);
-        fbMessage("Whoops! Something went wrong. Try again please!");
-    })
     .then(function (data) {
         saveYelpSearchOutput(data);
     })
@@ -966,21 +964,6 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
         shuffleYelp(jsonName);
     })
     .then(function (data) {
-        return yelpBiz.business(jsonId[responseCounter]);
-    })
-    .then(function (data) {
-        saveYelpBusinessOutput(data);
-    })
-    .then(function (data) {
-        /*
-        var i = responseCounter;
-        while (!jsonName[i] || !jsonImage[i] || !jsonUrl[i] || !jsonCat[i] || !jsonNumber[i] || !jsonRating[i]
-                || !jsonMapLat[i] || !jsonMapLong[i]) {
-                i++;
-                responseCounter = i;
-                console.log(responseCounter);
-        }
-        */
         while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
             || jsonCat[responseCounter].indexOf("Convenience")!=-1 
             || jsonCat[responseCounter].indexOf("Grocery")!=-1
@@ -990,12 +973,15 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
         if (responseCounter >= jsonName.length) {
             fbRestartRecommend(sender);
             responseCounter = 0;
+            exceedResNo = true;
+            return exceedResNo;
         } else {
             saveYelpBusinessOutput(yelpBiz.business(jsonId[responseCounter]));
+            return false;
         }
     })
     .then(function(data) {
-        if (responseCounter < jsonName.length) {
+        if (!exceedResNo) {
             return fbYelpTemplate(
                 sender,
                 jsonName[responseCounter],
@@ -1012,7 +998,7 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
         }
     })
     .then(function (data) {
-        if (responseCounter < jsonName.length) {
+        if (!exceedResNo) {
             if (jsonIsOpenNow=="Closed.") {
                 fbNextChoicePref(sender,"wantsOpen");
             } else if (jsonPrice[responseCounter]>=priceCeiling) {
