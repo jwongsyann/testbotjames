@@ -659,24 +659,26 @@ const actions = {
                 // Run lat and long through to yelp api
                 const message = "how about this?";
                 recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius);
-                console.log('recGive is:'+recGive);
-                if (recGive) {
-                    context.recGive = recGive;
-                } else {
-                    context.noRec = true;
-                }
-                return resolve(context);
             } else if (context.location) {
                 // Run location through to yelp api
                 const message = "how about this?";
                 recommendChunk(recipientId, message,null,null,context.location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
-                if (recGive) {
-                    context.recGive = recGive;
-                } else {
-                    context.noRec = true;
-                }
-                return resolve(context);
             }
+        });
+    },
+
+    checkIfRecGiven({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('recGive is:'+recGive);
+            if (recGive) {
+                context.recGive = recGive;
+                delete context.noRec;
+            } else {
+                context.noRec = true;
+                delete context.recGiven;
+            }
+            return resolve(context);
         });
     },
 
@@ -692,7 +694,7 @@ const actions = {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('checkForUserPref function called');
-            if (!exceedResNo) {
+            if (!exceedResNo & recGiven) {
                 if (jsonIsOpenNow=="Closed.") {
                     fbNextChoicePref(recipientId,"wantsOpen");
                 } else if (jsonPrice[responseCounter]>=priceCeiling) {
