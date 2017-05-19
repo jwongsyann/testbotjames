@@ -32,6 +32,7 @@ const PORT = process.env.PORT || 8445;
 
 // Wit.ai parameters
 const WIT_TOKEN = process.env.WIT_TOKEN;
+const MAX_STEPS = 25;
 
 // Messenger API parameters
 const FB_PAGE_TOKEN = process.env.FB_PAGE_TOKEN;
@@ -687,7 +688,7 @@ const actions = {
     bufferTime({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
-            setTimeout(function(){ console.log("bufferTime called"); }, 1000);
+            setTimeout(function(){ console.log("bufferTime called"); }, 1500);
             return resolve(context);
         });
     },
@@ -1296,7 +1297,8 @@ app.post('/webhook', (req, res) => {
                             wit.runActions(
                                     sessionId, // the user's current session
                                     text, // the user's message
-                                    sessions[sessionId].context // the user's current session state
+                                    sessions[sessionId].context, // the user's current session state
+                                    MAX_STEPS
                             )
                             .then((context) => {
                                 // Our bot did everything it has to do.
