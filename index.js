@@ -664,6 +664,7 @@ const actions = {
                 const message = "how about this?";
                 recommendChunk(recipientId, message,null,null,context.location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
             }
+            return resolve(context);
         });
     },
 
