@@ -659,15 +659,21 @@ const actions = {
             if (context.lat & context.long) {
                 // Run lat and long through to yelp api
                 const message = "how about this?";
-                recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius);
+                return recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius);
             } else if (context.location) {
                 // Run location through to yelp api
                 const message = "how about this?";
-                recommendChunk(recipientId, message,null,null,context.location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
+                return recommendChunk(recipientId, message,null,null,context.location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
             }
-            return true;
         })
         .then(function(data) {
+            if (data) {
+                context.recGiven = true;
+                delete context.noRec;
+            } else {
+                context.noRec = true;
+                delete context.noRec;
+            }
             return resolve(context);
         });
     },
