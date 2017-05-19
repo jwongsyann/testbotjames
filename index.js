@@ -672,6 +672,7 @@ const actions = {
     checkIfRecGiven({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
+            console.log("checkIfRecGiven function called")
             console.log(recGiven);
             console.log('recGiven is:'+recGiven);
             if (recGiven) {
@@ -1142,6 +1143,7 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
                     jsonIsOpenNow,
                     jsonPrice[responseCounter]
                 );
+                setTimeout(function(){ console.log("buffer"); }, 1500);
                 recGiven = true;
             }    
         } else {
@@ -1207,6 +1209,7 @@ const nextRecommendChunk = (sender) => {
                             jsonIsOpenNow,
                             jsonPrice[responseCounter]
                         );
+                        setTimeout(function(){ console.log("buffer"); }, 1500);
                         recGiven = true;
                     }    
                 } else {
