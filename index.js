@@ -657,6 +657,7 @@ const actions = {
                 // Run lat and long through to yelp api
                 const message = "how about this?";
                 recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius);
+                console.log('giveRec is:'+giveRec);
                 if (giveRec) {
                     context.giveRec = giveRec;
                 } else {
