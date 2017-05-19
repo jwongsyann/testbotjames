@@ -85,6 +85,7 @@ var jsonMapLong = '';
 var jsonId = '';
 var jsonPrice = '';
 var jsonIsOpenNow = '';
+var giveRec = false;
 
 // Save some preference parameters
 var wantsOpen = false;
@@ -115,6 +116,7 @@ const resetParams = () => {
     radius = 1000;
     offset = 0;
     newUser = false;
+    giveRec = false;
 }
 
 // ----------------------------------------------------------------------------
@@ -655,12 +657,23 @@ const actions = {
                 // Run lat and long through to yelp api
                 const message = "how about this?";
                 recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius);
+                if (giveRec) {
+                    context.giveRec = giveRec;
+                } else {
+                    context.noRec = true;
+                }
+                return resolve(context);
             } else if (context.location) {
                 // Run location through to yelp api
                 const message = "how about this?";
                 recommendChunk(recipientId, message,null,null,context.location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
+                if (giveRec) {
+                    context.giveRec = giveRec;
+                } else {
+                    context.noRec = true;
+                }
+                return resolve(context);
             }
-            return resolve(context);
         });
     },
 
@@ -698,6 +711,7 @@ const actions = {
             const recipientId = sessions[sessionId].fbid;
             console.log('nextSuggestion function called');
             nextRecommendChunk(recipientId);
+            return resolve(context);
         });
     },
 
@@ -1111,13 +1125,11 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
                     jsonMapLong[responseCounter],
                     jsonIsOpenNow,
                     jsonPrice[responseCounter]
-                );            
-                context.recGiven = true;
-                delete context.noRec;
+                );
+                giveRec = true;
             }    
         } else {
-            context.noRec = true;
-            delete context.recGiven;
+            giveRec = false;
         }
     })                               
     .catch(function (err) {
