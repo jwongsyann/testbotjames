@@ -1184,23 +1184,36 @@ const nextRecommendChunk = (sender) => {
                 return yelpBiz.business(jsonId[responseCounter])
             })
             .then(function (data) {
-                saveYelpBusinessOutput(data);
+                if (data) {
+                    saveYelpBusinessOutput(data);   
+                    return true;
+                } else {
+                    return false;
+                }
             })
-            .then(function (data) {
-                return fbYelpTemplate(
-                    sender,
-                    jsonName[responseCounter],
-                    jsonImage[responseCounter],
-                    jsonUrl[responseCounter],
-                    jsonCat[responseCounter],
-                    jsonNumber[responseCounter],
-                    jsonRating[responseCounter],
-                    jsonMapLat[responseCounter],
-                    jsonMapLong[responseCounter],
-                    jsonIsOpenNow,
-                    jsonPrice[responseCounter]
-                    )
-            })
+            .then(function(data) {
+                if (data) {
+                    if (!exceedResNo) {
+                        fbYelpTemplate(
+                            sender,
+                            jsonName[responseCounter],
+                            jsonImage[responseCounter],
+                            jsonUrl[responseCounter],
+                            jsonCat[responseCounter],
+                            jsonNumber[responseCounter],
+                            jsonRating[responseCounter],
+                            jsonMapLat[responseCounter],
+                            jsonMapLong[responseCounter],
+                            jsonIsOpenNow,
+                            jsonPrice[responseCounter]
+                        );
+                        recGiven = true;
+                    }    
+                } else {
+                    recGiven = false;
+                }
+                recError = false;
+            })   
             .catch(function(err) {
                 console.error(err);
             });
