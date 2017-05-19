@@ -85,7 +85,7 @@ var jsonMapLong = '';
 var jsonId = '';
 var jsonPrice = '';
 var jsonIsOpenNow = '';
-var recGive = false;
+var recGiven = false;
 var recError = false;
 
 // Save some preference parameters
@@ -117,7 +117,7 @@ const resetParams = () => {
     radius = 1000;
     offset = 0;
     newUser = false;
-    recGive = false;
+    recGiven = false;
     recError = false;
 }
 
@@ -1141,10 +1141,10 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
                     jsonIsOpenNow,
                     jsonPrice[responseCounter]
                 );
-                recGive = true;
+                recGiven = true;
             }    
         } else {
-            recGive = false;
+            recGiven = false;
         }
         recError = false;
     })                               
