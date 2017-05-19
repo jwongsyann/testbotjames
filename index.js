@@ -654,20 +654,13 @@ const actions = {
             if (context.lat & context.long) {
                 // Run lat and long through to yelp api
                 const message = "how about this?";
-                recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius)
-                .then(function(data) {
-                    context.recGiven=true;
-                    return resolve(context);
-                });
+                recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius);
             } else if (context.location) {
                 // Run location through to yelp api
                 const message = "how about this?";
-                recommendChunk(recipientId, message,null,null,context.location+' singapore',wantsOpen,priceRange,null,sortBy,radius)
-                .then(function(data){
-                    context.recGiven=true;
-                    return resolve(context);
-                });
+                recommendChunk(recipientId, message,null,null,context.location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
             }
+            return resolve(context);
         });
     },
 
@@ -675,7 +668,6 @@ const actions = {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('checkForUserPref function called');
-
             if (!exceedResNo) {
                 if (jsonIsOpenNow=="Closed.") {
                     fbNextChoicePref(recipientId,"wantsOpen");
@@ -963,125 +955,6 @@ const shuffleYelp = (array) => {
 }
 
 // ----------------------------------------------------------------------------
-// Create standard conversation chunks
-// ----------------------------------------------------------------------------
-const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,food,sortBy,radius) => {
-    if (!food) {
-        food = "";
-    }
-
-    sortBy = updateSortBy(sortBy);
-    
-    fbMessage(sender,message)
-    .then(function(data) {
-        typing(sender);
-    })
-    .then(function (data) {
-        if (lat&long) {
-                return yelp.search({term: food+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, offset: offset*50, limit: 50});
-        } else if (location) {
-                return yelp.search({term: food+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy, radius: radius, offset: offset*50, limit: 50});
-        }
-    })
-    .then(function (data) {
-        saveYelpSearchOutput(data);
-    })
-    .then(function (data) {
-        shuffleYelp(jsonName);
-    })
-    .then(function (data) {
-        while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
-            || jsonCat[responseCounter].indexOf("Convenience")!=-1 
-            || jsonCat[responseCounter].indexOf("Grocery")!=-1
-            || jsonCat[responseCounter].indexOf("Grocer")!=-1) {
-            responseCounter += 1;
-        }
-        if (responseCounter >= jsonName.length) {
-            fbRestartRecommend(sender);
-            responseCounter = 0;
-            exceedResNo = true;
-            return exceedResNo;
-        } else {
-            saveYelpBusinessOutput(yelpBiz.business(jsonId[responseCounter]));
-            return false;
-        }
-    })
-    .then(function(data) {
-        if (!exceedResNo) {
-            return fbYelpTemplate(
-                sender,
-                jsonName[responseCounter],
-                jsonImage[responseCounter],
-                jsonUrl[responseCounter],
-                jsonCat[responseCounter],
-                jsonNumber[responseCounter],
-                jsonRating[responseCounter],
-                jsonMapLat[responseCounter],
-                jsonMapLong[responseCounter],
-                jsonIsOpenNow,
-                jsonPrice[responseCounter]
-            );    
-        }
-    })                                                     
-    .catch(function (err) {
-        console.error(err);
-    });
-}
-
-const nextRecommendChunk = (sender) => {
-    // This part is to respond to the user's request for other recommendations!
-    if (responseCounter >= jsonName.length) {
-        fbRestartRecommend(sender);
-        responseCounter = 0;
-    } else {
-        var i = responseCounter;
-        i++;
-        responseCounter = i;
-        while (!jsonName[i] || !jsonImage[i] || !jsonUrl[i] || !jsonCat[i] || !jsonNumber[i] || !jsonRating[i]
-            || !jsonMapLat[i] || !jsonMapLong[i]) {
-            i++;
-            if (responseCounter >= jsonName.length) {
-                fbRestartRecommend(sender);
-                responseCounter = 0;
-                break;
-            } else {
-                responseCounter = i;
-            }
-        }
-        if (responseCounter < jsonName.length && responseCounter != 0) {
-            fbMessage(sender, "How about this?")
-            .then(function(data){
-                typing(sender);
-            })
-            .then(function (data) {
-                return yelpBiz.business(jsonId[responseCounter])
-            })
-            .then(function (data) {
-                saveYelpBusinessOutput(data);
-            })
-            .then(function (data) {
-                return fbYelpTemplate(
-                    sender,
-                    jsonName[responseCounter],
-                    jsonImage[responseCounter],
-                    jsonUrl[responseCounter],
-                    jsonCat[responseCounter],
-                    jsonNumber[responseCounter],
-                    jsonRating[responseCounter],
-                    jsonMapLat[responseCounter],
-                    jsonMapLong[responseCounter],
-                    jsonIsOpenNow,
-                    jsonPrice[responseCounter]
-                    )
-            })
-            .catch(function(err) {
-                console.error(err);
-            });
-        } 
-    }
-};
-
-// ----------------------------------------------------------------------------
 // Mongodb Codes
 // ----------------------------------------------------------------------------
 var db = mongoose.createConnection(MONGODB_URI);
@@ -1165,6 +1038,145 @@ const addOrUpdateUserResult = (fbid,resName,resCategory) => {
         }
     });
 }
+
+// ----------------------------------------------------------------------------
+// Create standard conversation chunks
+// ----------------------------------------------------------------------------
+const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,food,sortBy,radius) => {
+    if (!food) {
+        food = "";
+    }
+
+    sortBy = updateSortBy(sortBy);
+    
+    fbMessage(sender,message)
+    .then(function(data) {
+        typing(sender);
+    })
+    .then(function (data) {
+        if (lat&long) {
+                return yelp.search({term: food+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, offset: offset*50, limit: 50});
+        } else if (location) {
+                return yelp.search({term: food+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy, radius: radius, offset: offset*50, limit: 50});
+        }
+    })
+    .then(function (data) {
+        if (data) {
+            saveYelpSearchOutput(data);
+            return true;            
+        } else {
+            return false;
+        }
+    })
+    .then(function (data) {
+        if (data) {
+            shuffleYelp(jsonName);
+            return true;
+        } else {
+            return false;
+        }
+    })
+    .then(function (data) {
+        if (data) {
+            while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
+            || jsonCat[responseCounter].indexOf("Convenience")!=-1 
+            || jsonCat[responseCounter].indexOf("Grocery")!=-1
+            || jsonCat[responseCounter].indexOf("Grocer")!=-1) {
+                responseCounter += 1;
+            }
+            if (responseCounter >= jsonName.length) {
+                fbRestartRecommend(sender);
+                responseCounter = 0;
+                exceedResNo = true;
+            } else {
+                saveYelpBusinessOutput(yelpBiz.business(jsonId[responseCounter]));
+            }
+            return true;
+        } else {
+            return false;
+        }
+    })
+    .then(function(data) {
+        if (data) {
+            if (!exceedResNo) {
+                fbYelpTemplate(
+                    sender,
+                    jsonName[responseCounter],
+                    jsonImage[responseCounter],
+                    jsonUrl[responseCounter],
+                    jsonCat[responseCounter],
+                    jsonNumber[responseCounter],
+                    jsonRating[responseCounter],
+                    jsonMapLat[responseCounter],
+                    jsonMapLong[responseCounter],
+                    jsonIsOpenNow,
+                    jsonPrice[responseCounter]
+                );            
+                context.recGiven = true;
+                delete context.noRec;
+            }    
+        } else {
+            context.noRec = true;
+            delete context.recGiven;
+        }
+    })                               
+    .catch(function (err) {
+        console.error(err);
+    });
+}
+
+const nextRecommendChunk = (sender) => {
+    // This part is to respond to the user's request for other recommendations!
+    if (responseCounter >= jsonName.length) {
+        fbRestartRecommend(sender);
+        responseCounter = 0;
+    } else {
+        var i = responseCounter;
+        i++;
+        responseCounter = i;
+        while (!jsonName[i] || !jsonImage[i] || !jsonUrl[i] || !jsonCat[i] || !jsonNumber[i] || !jsonRating[i]
+            || !jsonMapLat[i] || !jsonMapLong[i]) {
+            i++;
+            if (responseCounter >= jsonName.length) {
+                fbRestartRecommend(sender);
+                responseCounter = 0;
+                break;
+            } else {
+                responseCounter = i;
+            }
+        }
+        if (responseCounter < jsonName.length && responseCounter != 0) {
+            fbMessage(sender, "How about this?")
+            .then(function(data){
+                typing(sender);
+            })
+            .then(function (data) {
+                return yelpBiz.business(jsonId[responseCounter])
+            })
+            .then(function (data) {
+                saveYelpBusinessOutput(data);
+            })
+            .then(function (data) {
+                return fbYelpTemplate(
+                    sender,
+                    jsonName[responseCounter],
+                    jsonImage[responseCounter],
+                    jsonUrl[responseCounter],
+                    jsonCat[responseCounter],
+                    jsonNumber[responseCounter],
+                    jsonRating[responseCounter],
+                    jsonMapLat[responseCounter],
+                    jsonMapLong[responseCounter],
+                    jsonIsOpenNow,
+                    jsonPrice[responseCounter]
+                    )
+            })
+            .catch(function(err) {
+                console.error(err);
+            });
+        } 
+    }
+};
 
 // ----------------------------------------------------------------------------
 // App Main Code Body
