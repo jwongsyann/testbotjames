@@ -660,8 +660,8 @@ const actions = {
                 // Run lat and long through to yelp api
                 const message = "how about this?";
                 recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius)
-                .then(function(data) {
-                    console.log("this code runs");
+                .then(function(data){
+                    console.log('this code runs!');
                 });
             } else if (context.location) {
                 // Run location through to yelp api
@@ -813,6 +813,9 @@ const actions = {
         });
     }
 }
+
+// External Wit Functions
+
 
 // Setting up our bot
 const wit = new Wit({
@@ -1097,6 +1100,7 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
     fbMessage(sender,message)
     .then(function(data) {
         typing(sender);
+        return true;
     })
     .then(function (data) {
         if (lat&long) {
@@ -1163,10 +1167,12 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
             recGiven = false;
         }
         recError = false;
+        return true;
     })                               
     .catch(function (err) {
         recError = true;
         console.error(err);
+        return true;
     });
 }
 
@@ -1228,9 +1234,11 @@ const nextRecommendChunk = (sender) => {
                     recGiven = false;
                 }
                 recError = false;
+                return true;
             })   
             .catch(function(err) {
                 console.error(err);
+                return true;
             });
         } 
     }
