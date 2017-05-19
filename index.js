@@ -86,6 +86,7 @@ var jsonId = '';
 var jsonPrice = '';
 var jsonIsOpenNow = '';
 var recGive = false;
+var recError = false;
 
 // Save some preference parameters
 var wantsOpen = false;
@@ -117,6 +118,7 @@ const resetParams = () => {
     offset = 0;
     newUser = false;
     recGive = false;
+    recError = false;
 }
 
 // ----------------------------------------------------------------------------
@@ -678,6 +680,14 @@ const actions = {
         });
     },
 
+    bufferTime({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            setTimeout(function(){ console.log("bufferTime called"); }, 1000);
+            return resolve(context);
+        });
+    },
+
     checkForUserPref({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
@@ -1132,8 +1142,10 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
         } else {
             recGive = false;
         }
+        recError = false;
     })                               
     .catch(function (err) {
+        recError = true;
         console.error(err);
     });
 }
