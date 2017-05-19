@@ -810,11 +810,6 @@ const actions = {
     }
 }
 
-// External Wit Functions
-recommendChunk.prototype.checkRes = function() {
-
-}
-
 // Setting up our bot
 const wit = new Wit({
     accessToken: WIT_TOKEN,
