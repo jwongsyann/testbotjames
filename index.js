@@ -673,7 +673,7 @@ const actions = {
             const recipientId = sessions[sessionId].fbid;
             console.log(recGiven);
             console.log('recGiven is:'+recGiven);
-            if (recGive) {
+            if (recGiven) {
                 context.recGiven = recGiven;
                 delete context.noRec;
             } else {
@@ -696,7 +696,7 @@ const actions = {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('checkForUserPref function called');
-            if (!exceedResNo & recGivenA) {
+            if (!exceedResNo & recGiven) {
                 if (jsonIsOpenNow=="Closed.") {
                     fbNextChoicePref(recipientId,"wantsOpen");
                 } else if (jsonPrice[responseCounter]>=priceCeiling) {
