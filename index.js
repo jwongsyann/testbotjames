@@ -665,6 +665,8 @@ const actions = {
                 const message = "how about this?";
                 recommendChunk(recipientId, message,null,null,context.location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
             }
+        })
+        .then(function(data) {
             return resolve(context);
         });
     },
@@ -1143,7 +1145,6 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
                     jsonIsOpenNow,
                     jsonPrice[responseCounter]
                 );
-                setTimeout(function(){ console.log("buffer"); }, 1500);
                 recGiven = true;
             }    
         } else {
@@ -1209,7 +1210,6 @@ const nextRecommendChunk = (sender) => {
                             jsonIsOpenNow,
                             jsonPrice[responseCounter]
                         );
-                        setTimeout(function(){ console.log("buffer"); }, 1500);
                         recGiven = true;
                     }    
                 } else {
