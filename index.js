@@ -85,7 +85,7 @@ var jsonMapLong = '';
 var jsonId = '';
 var jsonPrice = '';
 var jsonIsOpenNow = '';
-var giveRec = false;
+var recGive = false;
 
 // Save some preference parameters
 var wantsOpen = false;
@@ -116,7 +116,7 @@ const resetParams = () => {
     radius = 1000;
     offset = 0;
     newUser = false;
-    giveRec = false;
+    recGive = false;
 }
 
 // ----------------------------------------------------------------------------
@@ -657,9 +657,9 @@ const actions = {
                 // Run lat and long through to yelp api
                 const message = "how about this?";
                 recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius);
-                console.log('giveRec is:'+giveRec);
-                if (giveRec) {
-                    context.giveRec = giveRec;
+                console.log('recGive is:'+recGive);
+                if (recGive) {
+                    context.recGive = recGive;
                 } else {
                     context.noRec = true;
                 }
@@ -668,8 +668,8 @@ const actions = {
                 // Run location through to yelp api
                 const message = "how about this?";
                 recommendChunk(recipientId, message,null,null,context.location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
-                if (giveRec) {
-                    context.giveRec = giveRec;
+                if (recGive) {
+                    context.recGive = recGive;
                 } else {
                     context.noRec = true;
                 }
@@ -1127,10 +1127,10 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
                     jsonIsOpenNow,
                     jsonPrice[responseCounter]
                 );
-                giveRec = true;
+                recGive = true;
             }    
         } else {
-            giveRec = false;
+            recGive = false;
         }
     })                               
     .catch(function (err) {
