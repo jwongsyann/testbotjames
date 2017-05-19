@@ -659,7 +659,10 @@ const actions = {
             if (context.lat & context.long) {
                 // Run lat and long through to yelp api
                 const message = "how about this?";
-                return recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius);
+                return recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius)
+                .then(function(data) {
+                    console.log("this code runs");
+                });
             } else if (context.location) {
                 // Run location through to yelp api
                 const message = "how about this?";
