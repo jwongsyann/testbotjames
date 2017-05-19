@@ -672,9 +672,9 @@ const actions = {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log(recGiven);
-            console.log('recGive is:'+recGive);
+            console.log('recGiven is:'+recGiven);
             if (recGive) {
-                context.recGive = recGive;
+                context.recGiven = recGiven;
                 delete context.noRec;
             } else {
                 context.noRec = true;
