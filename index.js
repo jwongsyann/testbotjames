@@ -658,6 +658,9 @@ const actions = {
                 .then(resp=>{
                     console.log(resp);
                     return resolve(context);
+                })
+                .catch(err => {
+                    return reject(context);
                 });
             });
         }
