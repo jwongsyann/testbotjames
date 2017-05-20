@@ -653,7 +653,7 @@ const actions = {
         const recipientId = sessions[sessionId].fbid;
         if (context.lat && context.long) {
             console.log('this code runs');
-            message = "how about this?"
+            const message = "how about this?"
             return new Promise(function(resolve,reject) {
                 return recommendChunk(recipientId,message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius)
                 .then(data => {
