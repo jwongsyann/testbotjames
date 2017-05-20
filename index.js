@@ -663,7 +663,7 @@ const actions = {
                 const message = "how about this?";
                 return recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius);
                 */
-                yelp.search({term: food+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, offset: offset*50, limit: 50})
+                yelp.search({term: 'food', latitude: context.lat, longitude: context.long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, offset: offset*50, limit: 50})
                 .then(function(data){
                     console.log(data);
                 });
