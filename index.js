@@ -588,9 +588,6 @@ const actions = {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('checkLocation function called');
-            console.log(lat);
-            console.log(long);
-            console.log(location);
             if (lat & long) {
                 context.lat = lat;
                 context.long = long;
@@ -653,19 +650,34 @@ const actions = {
     },
 
     giveRec({sessionId,context, entities}) {
+        const recipientId = sessions[sessionId].fbid;
+        if (context.lat && context.long) {
+            console.log('this code runs');
+            message = "how about this?"
+            return new Promise(function(resolve,reject) {
+                return recommendChunk(recipientId,message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius)
+                .then(data => {
+                    context.recGiven = true;
+                    return resolve(context);
+                });
+            });
+        }
+
+        /*
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('giveRec function called');
             if (context.lat & context.long) {
-
-                /*
+                console.log("passing through to yelp");
+                
                 // Run lat and long through to yelp api
                 const message = "how about this?";
                 return recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius);
-                */
-                yelp.search({term: 'food', latitude: context.lat, longitude: context.long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, offset: offset*50, limit: 50})
-                .then(function(data){
-                    console.log(data);
+                
+                return yelp.search({term: 'food', latitude: context.lat, longitude: context.long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, offset: offset*50, limit: 50})
+                .then(data => {
+                    console.log("data passed through");
+                    return resolve(context);
                 });
             } else if (context.location) {
                 // Run location through to yelp api
@@ -673,17 +685,7 @@ const actions = {
                 return recommendChunk(recipientId, message,null,null,context.location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
             }
         })
-        .then(function(data) {
-            console.log(data);
-            if (data) {
-                context.recGiven = true;
-                delete context.noRec;
-            } else {
-                context.noRec = true;
-                delete context.noRec;
-            }
-            return resolve(context);
-        });
+        */
     },
 
     checkIfRecGiven({sessionId,context, entities}) {
