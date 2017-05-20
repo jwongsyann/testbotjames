@@ -815,7 +815,7 @@ const actions = {
             return resolve(context);
         });
     }
-}g
+}
 
 // Setting up our bot
 const wit = new Wit({
