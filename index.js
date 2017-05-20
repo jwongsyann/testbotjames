@@ -654,7 +654,7 @@ const actions = {
         if (context.lat && context.long) {
             const message = "how about this?"
             return new Promise(function(resolve,reject){
-                return yelp.search({term: food+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, offset: offset*50, limit: 50})
+                return yelp.search({term: 'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, offset: offset*50, limit: 50})
                 .then(resp=>{
                     console.log(resp);
                 });
