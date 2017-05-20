@@ -657,6 +657,7 @@ const actions = {
                 return yelp.search({term: 'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, offset: offset*50, limit: 50})
                 .then(resp=>{
                     console.log(resp);
+                    return resolve(context);
                 });
             });
         }
