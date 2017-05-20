@@ -652,14 +652,11 @@ const actions = {
     giveRec({sessionId,context, entities}) {
         const recipientId = sessions[sessionId].fbid;
         if (context.lat && context.long) {
-            console.log('this code runs');
             const message = "how about this?"
-            return new Promise(function(resolve,reject) {
-                return recommendChunk(recipientId,message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius)
-                .then(data => {
-                    context.recGiven = true;
-                    return resolve(context);
-                });
+            recommendChunk(recipientId,message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius)
+            .then(data => {
+                context.recGiven = true;
+                return context;
             });
         }
 
