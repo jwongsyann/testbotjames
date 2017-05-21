@@ -650,46 +650,84 @@ const actions = {
     },
 
     giveRec({sessionId,context, entities}) {
+        console.log('giveRec function called');
         const recipientId = sessions[sessionId].fbid;
         if (context.lat && context.long) {
-            const message = "how about this?"
             return new Promise(function(resolve,reject){
-                return yelp.search({term: 'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, offset: offset*50, limit: 50})
-                .then(resp=>{
-                    console.log(resp);
+                typing(recipientId)
+                .then(function(data){
+                    return yelp.search({term: 'food', latitude: context.lat, longitude: context.long, open_now: wantsOpen, radius: radius, price: priceRange, limit: 50})
+                })
+                .then(function(data){
+                    return saveYelpSearchOutput(data);
+                })
+                .then(function(data){
+                    return shuffleYelp(jsonName);
+                })
+                .then(function(data){
+                    while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
+                    || jsonCat[responseCounter].indexOf("Convenience")!=-1 
+                    || jsonCat[responseCounter].indexOf("Grocery")!=-1
+                    || jsonCat[responseCounter].indexOf("Grocer")!=-1) {
+                        responseCounter += 1;
+                    }
+                    if (responseCounter >= jsonName.length) {
+                        fbRestartRecommend(recipientId);
+                        responseCounter = 0;
+                        exceedResNo = true;
+                    } else {
+                        return yelpBiz.business(jsonId[responseCounter]);
+                    }
+                })
+                .then(function(data){
+                    return saveYelpBusinessOutput(data);
+                })
+                .then(function(data){
+                    if (!exceedResNo) {
+                        return fbYelpTemplate(
+                            recipientId,
+                            jsonName[responseCounter],
+                            jsonImage[responseCounter],
+                            jsonUrl[responseCounter],
+                            jsonCat[responseCounter],
+                            jsonNumber[responseCounter],
+                            jsonRating[responseCounter],
+                            jsonMapLat[responseCounter],
+                            jsonMapLong[responseCounter],
+                            jsonIsOpenNow,
+                            jsonPrice[responseCounter]
+                        );
+                    }    
+                })
+                .then(function(data){
+                    /*
+                    if (!exceedResNo) {
+                        if (jsonIsOpenNow=="Closed.") {
+                            fbNextChoicePref(recipientId,"wantsOpen");
+                        } else if (jsonPrice[responseCounter]>=priceCeiling) {
+                            fbNextChoicePref(recipientId,"wantsLowPrice")
+                        } else if (jsonRating[responseCounter]<=ratingFloor) {
+                            fbNextChoicePref(recipientId,"wantsHighRating")
+                        } else {
+                            fbNextChoice(recipientId);
+                        }
+                    }
+                    */
+                    context.recGiven = true;
+                    delete context.noRec;
                     return resolve(context);
                 })
                 .catch(err => {
-                    return reject(context);
+                    console.error(err);
+                    context.noRec = true;
+                    delete context.recGiven;
+                    return resolve(context);
                 });
             });
         }
-
-        /*
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log('giveRec function called');
-            if (context.lat & context.long) {
-                console.log("passing through to yelp");
-                
-                // Run lat and long through to yelp api
-                const message = "how about this?";
-                return recommendChunk(recipientId, message,context.lat,context.long,null,wantsOpen,priceRange,null,sortBy,radius);
-                
-                return yelp.search({term: 'food', latitude: context.lat, longitude: context.long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, offset: offset*50, limit: 50})
-                .then(data => {
-                    console.log("data passed through");
-                    return resolve(context);
-                });
-            } else if (context.location) {
-                // Run location through to yelp api
-                const message = "how about this?";
-                return recommendChunk(recipientId, message,null,null,context.location+' singapore',wantsOpen,priceRange,null,sortBy,radius);
-            }
-        })
-        */
     },
 
+    /* Don't need all these already.
     checkIfRecGiven({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
@@ -707,6 +745,7 @@ const actions = {
         });
     },
 
+
     bufferTime({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
@@ -714,12 +753,13 @@ const actions = {
             return resolve(context);
         });
     },
+    */
 
     checkForUserPref({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('checkForUserPref function called');
-            if (!exceedResNo & recGiven) {
+            if (!exceedResNo & context.recGiven) {
                 if (jsonIsOpenNow=="Closed.") {
                     fbNextChoicePref(recipientId,"wantsOpen");
                 } else if (jsonPrice[responseCounter]>=priceCeiling) {
@@ -745,12 +785,72 @@ const actions = {
     },
 
     nextRec({sessionId,context, entities}) {
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log('nextSuggestion function called');
-            nextRecommendChunk(recipientId);
-            return resolve(context);
-        });
+        console.log('nextRec function called');
+        const recipientId = sessions[sessionId].fbid;
+
+        if (responseCounter >= jsonName.length) {
+            // NEED TO HANDLE THIS PART VIA WIT
+            fbRestartRecommend(sender);
+            responseCounter = 0;
+        } else {
+            var i = responseCounter;
+            i++;
+            responseCounter = i;
+            while (!jsonName[i] || !jsonImage[i] || !jsonUrl[i] || !jsonNumber[i] || !jsonRating[i]
+                || !jsonMapLat[i] || !jsonMapLong[i] || jsonCat[i].indexOf("Supermarkets")!=-1 
+                || jsonCat[i].indexOf("Convenience")!=-1 
+                || jsonCat[i].indexOf("Grocery")!=-1
+                || jsonCat[i].indexOf("Grocer")!=-1) {
+                i++;
+                if (responseCounter >= jsonName.length) {
+                    // NEED TO HANDLE THIS PART VIA WIT
+                    fbRestartRecommend(sender);
+                    responseCounter = 0;
+                    break;
+                } else {
+                    responseCounter = i;
+                }
+            }
+        }
+        if (responseCounter < jsonName.length && responseCounter != 0) {
+            return new Promise(function(resolve,reject){
+                typing(recipientId)
+                .then(function (data) {
+                    return yelpBiz.business(jsonId[responseCounter])
+                })
+                .then(function (data) {
+                    return saveYelpBusinessOutput(data);   
+                })
+                .then(function(data) {
+                    if (!exceedResNo) {
+                        return fbYelpTemplate(
+                            recipientId,
+                            jsonName[responseCounter],
+                            jsonImage[responseCounter],
+                            jsonUrl[responseCounter],
+                            jsonCat[responseCounter],
+                            jsonNumber[responseCounter],
+                            jsonRating[responseCounter],
+                            jsonMapLat[responseCounter],
+                            jsonMapLong[responseCounter],
+                            jsonIsOpenNow,
+                            jsonPrice[responseCounter]
+                        );
+                    }    
+                })
+                .then(function(data){
+                    context.recGiven = true;
+                    delete context.noRec;
+                    return resolve(context);
+                })
+                .catch(err => {
+                    console.error(err);
+                    context.noRec = true;
+                    delete context.recGiven;
+                    return resolve(context);
+                });
+            });
+        }
     },
 
     changeExpensivePref({sessionId,context, entities}) {
@@ -759,15 +859,27 @@ const actions = {
             console.log('changeExpensivePref function called');
             wantsLowPrice=true;
             if (priceCeiling==1) {
-                fbMessage(sender,"Hmm, these are already the cheapest restaurants I have for you. Maybe I should start the search again?")
-                .then(function(data){
-                    fbRestartRecommend(sender);
-                });
+                context.lowestPrice = true;
+                delete context.reducePrice;
+                return resolve(context);
             } else {
+                priceCeiling -= 1;
                 priceRange=updatePriceRange(priceCeiling-1);
-                const message = "ok, i'll find cheaper ones. How about this?";
-                recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);   
+                context.reducePrice = true;
+                delete context.lowestPrice;
+                return resolve(context);
             }
+        });
+    },
+
+    resetExpensivePref({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('resetExpensivePref function called');
+            wantsLowPrice=false;
+            priceCeiling = 4;
+            priceRange = updatePriceRange(priceCeiling);
+            return resolve(context);
         });
     },
 
@@ -776,8 +888,8 @@ const actions = {
             const recipientId = sessions[sessionId].fbid;
             console.log('changeExpensivePref function called');
             wantsOpen=true;
-            const message = "Haha right. Here are some open ones.";
-            recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
+            context.openOnly=wantsOpen;
+            return resolve(context);
         });
     },
 
@@ -787,8 +899,8 @@ const actions = {
             console.log('changeRatingPref function called');
             wantsHighRating=true;
             sortBy = updateSortBy(true);
-            const message = "Haha right. I'll give you the better ones first.";
-            recommendChunk(recipientId, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
+            context.wantsHighRating=wantsHighRating;
+            return resolve(context);
         });
     },
 
@@ -1108,7 +1220,7 @@ const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,f
     })
     .then(function (data) {
         if (lat&long) {
-                return yelp.search({term: food+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by:sortBy, radius: radius, offset: offset*50, limit: 50});
+                return yelp.search({term: food+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by: sortBy, radius: radius, offset: offset*50, limit: 50});
         } else if (location) {
                 return yelp.search({term: food+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy, radius: radius, offset: offset*50, limit: 50});
         }
