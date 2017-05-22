@@ -659,7 +659,14 @@ const actions = {
                     return yelp.search({term: 'food', latitude: context.lat, longitude: context.long, open_now: wantsOpen, radius: radius, price: priceRange, limit: 50})
                 })
                 .then(function(data){
-                    return saveYelpSearchOutput(data);
+                    if (data) {
+                        return saveYelpSearchOutput(data);   
+                    } else {
+                        context.noRec = true;
+                        delete context.recGiven;
+                        delete context.missingLocation;
+                        return resolve(context);
+                    }
                 })
                 .then(function(data){
                     return shuffleYelp(jsonName);
@@ -715,15 +722,19 @@ const actions = {
                     */
                     context.recGiven = true;
                     delete context.noRec;
+                    delete context.missingLocation;
                     return resolve(context);
                 })
                 .catch(err => {
                     console.error(err);
-                    context.noRec = true;
-                    delete context.recGiven;
-                    return resolve(context);
+                    return reject(context);
                 });
             });
+        } else {
+            context.missingLocation = true;
+            delete context.noRec;
+            delete context.recGiven;
+            return context;
         }
     },
 
