@@ -735,7 +735,7 @@ const actions = {
                     }
                 })
                 .then(function(data){
-                    if (!exceedResNo) {
+                    if (!exceedResNo & data) {
                         return fbYelpTemplate(
                             recipientId,
                             jsonName[responseCounter],
@@ -749,7 +749,7 @@ const actions = {
                             jsonIsOpenNow,
                             jsonPrice[responseCounter]
                         );
-                    }    
+                    }
                 })
                 .then(function(data){
                     context.recGiven = true;
