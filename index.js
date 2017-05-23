@@ -12,6 +12,9 @@ const async = require('async');
 const Yelp = require('yelp-api-v3');
 const YelpBiz = require('node-yelp-fusion');
 const mongoose = require('mongoose');
+const googleMapsClient = require('@google/maps').createClient({
+  key: GOOGLEMAP_KEY
+});
 
 let Wit = null;
 let log = null;
@@ -61,6 +64,10 @@ if (!YELP_SECRET) { throw new Error('missing YELP_SECRET') }
 // Mongoose API parameters
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) { throw new Error('missing MONGODB_URI') }
+
+// Google Maps API parameters
+const GOOGLEMAP_KEY = process.env.GOOGLEMAP_KEY;
+if (!GOOGLEMAP_KEY) { throw new Error('missing GOOGLEMAP_KEY') }
 
 // ----------------------------------------------------------------------------
 // Initialize all other parameters
@@ -630,12 +637,30 @@ const actions = {
             const recipientId = sessions[sessionId].fbid;
             console.log('saveLocation function called');
             location = firstEntityValue(entities,'location');
-            const message_body = firstEntityValue(entities,'message_body');
-            console.log(message_body);
             if (location) {
                 context.location = location;
             }
             return resolve(context);
+        });
+    },
+
+    runGeocoder({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('runGeocoder function called');
+            location = firstEntityValue(entities,'location');
+            if (location) {
+                    // Geocode an address
+                    googleMapsClient.geocode({
+                      address: location
+                    }, function(err, response) {
+                        if (!err) {
+                            context.lat = response.json.results[0]['geometry']['location']['lat'];
+                            context.long = response.json.results[0]['geometry']['location']['lng'];
+                            return resolve(context);
+                        }
+                    });
+            }
         });
     },
     
