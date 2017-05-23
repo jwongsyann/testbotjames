@@ -652,7 +652,7 @@ const actions = {
             if (context.location) {
                     // Geocode an address
                     return googleMapsClient.geocode({
-                      address: location
+                      address: context.location
                     }, function(err, response) {
                         if (!err) {
                             context.lat = response.json.results[0]['geometry']['location']['lat'];
@@ -701,25 +701,38 @@ const actions = {
                     }
                 })
                 .then(function(data){
-                    return shuffleYelp(jsonName);
-                })
-                .then(function(data){
-                    while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
-                    || jsonCat[responseCounter].indexOf("Convenience")!=-1 
-                    || jsonCat[responseCounter].indexOf("Grocery")!=-1
-                    || jsonCat[responseCounter].indexOf("Grocer")!=-1) {
-                        responseCounter += 1;
-                    }
-                    if (responseCounter >= jsonName.length) {
-                        fbRestartRecommend(recipientId);
-                        responseCounter = 0;
-                        exceedResNo = true;
+                    if (jsonName) {
+                        return shuffleYelp(jsonName);   
                     } else {
-                        return yelpBiz.business(jsonId[responseCounter]);
+                        return false;
                     }
                 })
                 .then(function(data){
-                    return saveYelpBusinessOutput(data);
+                    if (data) {
+                        while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
+                        || jsonCat[responseCounter].indexOf("Convenience")!=-1 
+                        || jsonCat[responseCounter].indexOf("Grocery")!=-1
+                        || jsonCat[responseCounter].indexOf("Grocer")!=-1) {
+                            responseCounter += 1;
+                        }
+                        if (responseCounter >= jsonName.length) {
+                            fbRestartRecommend(recipientId);
+                            responseCounter = 0;
+                            exceedResNo = true;
+                        } else {
+                            return yelpBiz.business(jsonId[responseCounter]);
+                        }    
+                    } else {
+                        return false;
+                    }
+                    
+                })
+                .then(function(data){
+                    if (data) {
+                        return saveYelpBusinessOutput(data);   
+                    } else {
+                        return false;
+                    }
                 })
                 .then(function(data){
                     if (!exceedResNo) {
