@@ -770,6 +770,25 @@ const actions = {
         }
     },
 
+    checkRadius({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('checkRadius function called');
+            context.radius = radius;
+            return resolve(context);
+        });
+    },
+
+    saveRadiusPref({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('saveRadiusPref function called');
+            radius = firstEntityValue(entities,'distance');
+            context.radius = radius;
+            return resolve(context);
+        });
+    },
+
     checkForUserPref({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
