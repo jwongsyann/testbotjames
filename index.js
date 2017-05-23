@@ -13,7 +13,7 @@ const Yelp = require('yelp-api-v3');
 const YelpBiz = require('node-yelp-fusion');
 const mongoose = require('mongoose');
 const googleMapsClient = require('@google/maps').createClient({
-  key: GOOGLEMAP_KEY
+  key: encodeURIComponent(GOOGLEMAP_KEY)
 });
 
 let Wit = null;
