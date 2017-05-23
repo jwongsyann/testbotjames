@@ -639,6 +639,7 @@ const actions = {
             location = firstEntityValue(entities,'location');
             if (location) {
                 context.location = location;
+                delete context.missingLocation;
             }
             return resolve(context);
         });
@@ -657,6 +658,7 @@ const actions = {
                         if (!err) {
                             context.lat = response.json.results[0]['geometry']['location']['lat'];
                             context.long = response.json.results[0]['geometry']['location']['lng'];
+                            delete context.missingLocation;
                             return resolve(context);
                         }
                     });
