@@ -659,7 +659,7 @@ const actions = {
                     return yelp.search({term: 'food', latitude: context.lat, longitude: context.long, open_now: wantsOpen, radius: radius, price: priceRange, limit: 50})
                 })
                 .then(function(data){
-                    if (data) {
+                    if (data.businesses) {
                         return saveYelpSearchOutput(data);   
                     } else {
                         context.noRec = true;
@@ -707,19 +707,6 @@ const actions = {
                     }    
                 })
                 .then(function(data){
-                    /*
-                    if (!exceedResNo) {
-                        if (jsonIsOpenNow=="Closed.") {
-                            fbNextChoicePref(recipientId,"wantsOpen");
-                        } else if (jsonPrice[responseCounter]>=priceCeiling) {
-                            fbNextChoicePref(recipientId,"wantsLowPrice")
-                        } else if (jsonRating[responseCounter]<=ratingFloor) {
-                            fbNextChoicePref(recipientId,"wantsHighRating")
-                        } else {
-                            fbNextChoice(recipientId);
-                        }
-                    }
-                    */
                     context.recGiven = true;
                     delete context.noRec;
                     delete context.missingLocation;
@@ -737,34 +724,6 @@ const actions = {
             return context;
         }
     },
-
-    /* Don't need all these already.
-    checkIfRecGiven({sessionId,context, entities}) {
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log("checkIfRecGiven function called")
-            console.log(recGiven);
-            console.log('recGiven is:'+recGiven);
-            if (recGiven) {
-                context.recGiven = recGiven;
-                delete context.noRec;
-            } else {
-                context.noRec = true;
-                delete context.recGiven;
-            }
-            return resolve(context);
-        });
-    },
-
-
-    bufferTime({sessionId,context, entities}) {
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
-            setTimeout(function(){ console.log("bufferTime called"); }, 1500);
-            return resolve(context);
-        });
-    },
-    */
 
     checkForUserPref({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
@@ -829,8 +788,15 @@ const actions = {
                 .then(function (data) {
                     return yelpBiz.business(jsonId[responseCounter])
                 })
-                .then(function (data) {
-                    return saveYelpBusinessOutput(data);   
+                .then(function(data){
+                    if (data.businesses) {
+                        return saveYelpSearchOutput(data);   
+                    } else {
+                        context.noRec = true;
+                        delete context.recGiven;
+                        delete context.missingLocation;
+                        return resolve(context);
+                    }
                 })
                 .then(function(data) {
                     if (!exceedResNo) {
@@ -920,25 +886,6 @@ const actions = {
             const recipientId = sessions[sessionId].fbid;
             console.log('endConvo function called');
             context.done = true;
-            return resolve(context);
-        });
-    },
-
-
-    restartRecommend({sessionId,context,entities}) {
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log('restartRecommend function called');
-            responseCounter = 0;
-            return resolve(context);
-        });
-    },
-
-    enlargeSearch({sessionId,context,entities}) {
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log('enlargeSearch function called');
-            radius = 5000;
             return resolve(context);
         });
     }
