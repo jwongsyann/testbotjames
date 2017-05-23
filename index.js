@@ -649,8 +649,7 @@ const actions = {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('runGeocoder function called');
-            location = firstEntityValue(entities,'location');
-            if (location) {
+            if (context.location) {
                     // Geocode an address
                     return googleMapsClient.geocode({
                       address: location
@@ -659,6 +658,7 @@ const actions = {
                             context.lat = response.json.results[0]['geometry']['location']['lat'];
                             context.long = response.json.results[0]['geometry']['location']['lng'];
                             delete context.missingLocation;
+                            delete context.location;
                             return resolve(context);
                         } else {err} {
                             context.err = true;
