@@ -660,6 +660,11 @@ const actions = {
                             context.long = response.json.results[0]['geometry']['location']['lng'];
                             delete context.missingLocation;
                             return resolve(context);
+                        } else {err} {
+                            context.err = true;
+                            delete context.lat;
+                            delete context.long;
+                            return resolve(context);
                         }
                     });
             }
