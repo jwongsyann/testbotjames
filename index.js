@@ -824,7 +824,7 @@ const actions = {
 
         if (responseCounter >= jsonName.length) {
             // NEED TO HANDLE THIS PART VIA WIT
-            fbRestartRecommend(sender);
+            fbRestartRecommend(recipientId);
             responseCounter = 0;
         } else {
             var i = responseCounter;
@@ -838,7 +838,7 @@ const actions = {
                 i++;
                 if (responseCounter >= jsonName.length) {
                     // NEED TO HANDLE THIS PART VIA WIT
-                    fbRestartRecommend(sender);
+                    fbRestartRecommend(recipientId);
                     responseCounter = 0;
                     break;
                 } else {
