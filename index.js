@@ -652,7 +652,7 @@ const actions = {
             location = firstEntityValue(entities,'location');
             if (location) {
                     // Geocode an address
-                    googleMapsClient.geocode({
+                    return googleMapsClient.geocode({
                       address: location
                     }, function(err, response) {
                         if (!err) {
