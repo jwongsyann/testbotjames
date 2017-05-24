@@ -964,8 +964,8 @@ const actions = {
                     }
                 })
                 .then(function(data){
-                    if (jsonName) {
-                        return shuffleYelp(jsonName);   
+                    if (data) {
+                        return shuffleYelp(data);   
                     } else {
                         return false;
                     }
