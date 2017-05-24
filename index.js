@@ -783,7 +783,7 @@ const actions = {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('saveRadiusPref function called');
-            radius = firstEntityValue(entities,'distance');
+            radius = Number(firstEntityValue(entities,'distance'));
             if(!radius) {
                 context.radius = 'missing';
             }
