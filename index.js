@@ -1045,6 +1045,7 @@ const actions = {
             const recipientId = sessions[sessionId].fbid;
             console.log('saveRadiusPref function called');
             radius = Number(firstEntityValue(entities,'distance'));
+            console.log(radius);
             if(!radius) {
                 context.radius = 'missing';
             }
