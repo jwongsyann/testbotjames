@@ -1172,6 +1172,7 @@ const actions = {
                     }
                 })
                 .then(function(data){
+                    console.log(context);
                     return resolve(context);
                 })
                 .catch(err => {
