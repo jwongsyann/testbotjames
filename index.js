@@ -657,6 +657,8 @@ const actions = {
                         if (!err) {
                             context.lat = response.json.results[0]['geometry']['location']['lat'];
                             context.long = response.json.results[0]['geometry']['location']['lng'];
+                            lat = context.lat;
+                            long = context.long;
                             delete context.missingLocation;
                             delete context.location;
                             return resolve(context);
