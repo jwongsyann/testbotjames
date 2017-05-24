@@ -487,6 +487,270 @@ const fbRestartRecommend = (id) => {
 };
 
 // ----------------------------------------------------------------------------
+// Yelp API specific code
+// ----------------------------------------------------------------------------
+var yelp = new Yelp({
+    app_id: YELP_ID,
+    app_secret: YELP_SECRET
+});
+
+// use different package for Biz search
+var yelpBiz = new YelpBiz({ id: YELP_ID, secret: YELP_SECRET});
+
+// Create function to save yelp search output
+const saveYelpSearchOutput = (data) => {
+    jsonString = JSON.parse(data);
+    jsonBiz = jsonString.businesses;
+    jsonBiz = jsonString.businesses;
+    jsonName = [jsonBiz[0].name]; 
+    jsonUrl = [jsonBiz[0].url];
+    var i = 0;
+    do {
+        if (i == jsonBiz[0].categories.length) {
+            jsonCat += jsonBiz[0].categories[i].title;      
+        } else if (i == 0) {
+            jsonCat = [jsonBiz[0].categories[0].title];
+        } else {
+            jsonCat += ", " + jsonBiz[0].categories[i].title;
+        }
+        i++;
+    } while (i<jsonBiz[0].categories.length);
+    jsonCat = [jsonCat];
+    jsonImage = [jsonBiz[0].image_url];
+    jsonNumber = [jsonBiz[0].phone];
+    jsonRating = [jsonBiz[0].rating];
+    jsonMapLat = [jsonBiz[0].coordinates.latitude];
+    jsonMapLong = [jsonBiz[0].coordinates.longitude];
+    jsonId = [jsonBiz[0].id];
+    if (jsonBiz[0].price) {
+        jsonPrice = [jsonBiz[0].price.length];   
+    } else {
+        jsonPrice = [""];
+    }
+    // Store all results
+    i = 0;
+    if (jsonBiz.length > 0) {
+        do {
+            jsonName[i] = jsonBiz[i].name; 
+            jsonUrl[i] = jsonBiz[i].url;
+            var j = 0;
+            do {
+                if (j == jsonBiz[i].categories.length) {
+                    jsonCat[i] += jsonBiz[i].categories[j].title;   
+                } else if (j == 0) {
+                    jsonCat[i] = jsonBiz[i].categories[0].title;
+                } else {
+                    jsonCat[i] += ", " + jsonBiz[i].categories[j].title;
+                }
+                j++;
+            } while (j<jsonBiz[i].categories.length);
+            jsonImage[i] = jsonBiz[i].image_url;
+            if (jsonImage[i]) {
+                jsonImage[i] = jsonImage[i].replace("ms.jpg","o.jpg");
+            }
+            jsonNumber[i] = jsonBiz[i].phone;
+            jsonRating[i] = jsonBiz[i].rating;
+            jsonMapLat[i] = jsonBiz[i].coordinates.latitude;
+            jsonMapLong[i] = jsonBiz[i].coordinates.longitude;
+            jsonId[i] = jsonBiz[i].id;
+            if (jsonBiz[i].price) {
+                jsonPrice[i] = jsonBiz[i].price.length;
+            } else {
+                jsonPrice[i] = "Not available";
+            }
+            i++;
+        } while (i < jsonBiz.length);
+    }
+    return true;
+};
+
+// Create function to save yelp business output
+const saveYelpBusinessOutput = (data) => {
+    if (data.hours) {
+        const jsonHours = data.hours;
+        jsonIsOpenNow = jsonHours[0].is_open_now; 
+        if (jsonIsOpenNow==true) {
+            jsonIsOpenNow = "Open now."
+        } else {
+            jsonIsOpenNow = "Closed."
+        }
+        var resObj = jsonIsOpenNow;    
+    } else {
+        var resObj = "Unknown status";
+    }
+
+    return resObj;
+};
+
+const updatePriceRange = (data) => {
+    var res = "";
+    switch (data) {
+        case 4:
+            res = '1,2,3,4';
+            break;
+        case 3:
+            res = '1,2,3';
+            break;
+        case 2:
+            res = '1,2';
+            break;
+        case 1:
+            res = '1';
+    }
+    return res;
+}
+
+const updateSortBy = (data) => {
+    var res = "";
+    if (data) {
+        res = "rating";
+    } else {
+        res = "best_match";
+    }
+    return res;
+}
+
+var priceRange = updatePriceRange(priceCeiling);
+
+const updateOffset = () => {
+    offset += 1;
+}
+
+const shuffleYelp = (array) => {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = jsonName[i];
+        var temp2 = jsonCat[i];
+        var temp3 = jsonImage[i];
+        var temp4 = jsonRating[i];
+        var temp5 = jsonPrice[i];
+        var temp6 = jsonUrl[i];
+        var temp7 = jsonMapLat[i];
+        var temp8 = jsonMapLong[i];
+        var temp9 = jsonId[i];
+
+        jsonName[i] = jsonName[j];
+        jsonName[j] = temp;
+
+        jsonCat[i] = jsonCat[j];
+        jsonCat[j] = temp2;
+
+        jsonImage[i] = jsonImage[j];
+        jsonImage[j] = temp3;
+
+        jsonRating[i] = jsonRating[j];
+        jsonRating[j] = temp4;
+
+
+        jsonPrice[i] = jsonPrice[j];
+        jsonPrice[j] = temp5;
+
+
+        jsonUrl[i] = jsonUrl[j];
+        jsonUrl[j] = temp6;
+
+
+        jsonMapLat[i] = jsonMapLat[j];
+        jsonMapLat[j] = temp7;
+
+
+        jsonMapLong[i] = jsonMapLong[j];
+        jsonMapLong[j] = temp8;
+
+
+        jsonId[i] = jsonId[j];
+        jsonId[j] = temp9;
+    }
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+// Mongodb Codes
+// ----------------------------------------------------------------------------
+var db = mongoose.createConnection(MONGODB_URI);
+var status;
+db.on('error', function(err){
+    if(err) throw err;
+});
+
+db.once('open', function callback () {
+    console.info('Mongo db connected successfully');
+    status = "live";
+});
+
+db.on('disconnected', function callback () {
+    status = "dead";
+});
+
+const schema = mongoose.Schema;    
+const userSessionSchema = new schema({
+    fbid : String,
+    firstName: String,
+    created_at: Date,
+    updated_at: Date
+});
+
+// Add model to mongoose
+const userSession = db.model('userSession', userSessionSchema);
+
+const addOrUpdateUser = (fbid,firstName) => {
+    // if disconnected, reconnect
+    console.log(status);
+    if (status=="dead") {
+        db.open();
+    }
+    // Find user, otherwise save new user
+    // Setup stuff
+    var query = { fbid:fbid },
+        update = { fbid:fbid, firstName: firstName, $setOnInsert: {created_at: new Date()}, updated_at: new Date() },
+        options = { upsert: true, returnNewDocument: true };
+
+    // Find the document
+    userSession.findOneAndUpdate(query, update, options, function(error, result) {
+        if (error) throw error;
+        if (result) {
+            console.log("User session updated!");
+        } else {
+            console.log("User session created!");
+            newUser = true;
+        }
+    });
+}
+
+const userSavedResultsSchema = new schema({
+    fbid : String,
+    resName: String,
+    resCategory: String
+});
+
+// Add model to mongoose
+const userSavedResults = db.model('userSavedResults', userSavedResultsSchema);
+
+const addOrUpdateUserResult = (fbid,resName,resCategory) => {
+    // if disconnected, reconnect
+    console.log(status);
+    if (status=="dead") {
+        db.open();
+    }
+    // Find user, otherwise save new user
+    // Setup stuff
+    var query = { fbid:fbid },
+        update = { fbid:fbid, resName: resName, resCategory:resCategory },
+        options = { upsert: true, returnNewDocument: true };
+
+    // Find the document
+    userSession.findOneAndUpdate(query, update, options, function(error, result) {
+        if (error) throw error;
+        if (result) {
+            console.log("User results updated!");
+        } else {
+            console.log("User results created!");
+        }
+    });
+}
+
+
+// ----------------------------------------------------------------------------
 // Wit.ai bot specific code
 // ----------------------------------------------------------------------------
 // This will contain all user sessions.
@@ -595,15 +859,11 @@ const actions = {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('checkLocation function called');
+            console.log(lat+long);
             if (lat & long) {
                 context.lat = lat;
                 context.long = long;
                 delete context.location;
-                delete context.missingLocation;
-            } else if (location) {
-                context.location = location;
-                delete context.lat;
-                delete context.long;
                 delete context.missingLocation;
             } else {
                 context.missingLocation = true;
@@ -966,426 +1226,6 @@ const wit = new Wit({
     actions,
     logger: new log.Logger(log.INFO)
 });
-
-// ----------------------------------------------------------------------------
-// Yelp API specific code
-// ----------------------------------------------------------------------------
-var yelp = new Yelp({
-    app_id: YELP_ID,
-    app_secret: YELP_SECRET
-});
-
-// use different package for Biz search
-var yelpBiz = new YelpBiz({ id: YELP_ID, secret: YELP_SECRET});
-
-// Create function to save yelp search output
-const saveYelpSearchOutput = (data) => {
-    jsonString = JSON.parse(data);
-    jsonBiz = jsonString.businesses;
-    jsonBiz = jsonString.businesses;
-    jsonName = [jsonBiz[0].name]; 
-    jsonUrl = [jsonBiz[0].url];
-    var i = 0;
-    do {
-        if (i == jsonBiz[0].categories.length) {
-            jsonCat += jsonBiz[0].categories[i].title;      
-        } else if (i == 0) {
-            jsonCat = [jsonBiz[0].categories[0].title];
-        } else {
-            jsonCat += ", " + jsonBiz[0].categories[i].title;
-        }
-        i++;
-    } while (i<jsonBiz[0].categories.length);
-    jsonCat = [jsonCat];
-    jsonImage = [jsonBiz[0].image_url];
-    jsonNumber = [jsonBiz[0].phone];
-    jsonRating = [jsonBiz[0].rating];
-    jsonMapLat = [jsonBiz[0].coordinates.latitude];
-    jsonMapLong = [jsonBiz[0].coordinates.longitude];
-    jsonId = [jsonBiz[0].id];
-    if (jsonBiz[0].price) {
-        jsonPrice = [jsonBiz[0].price.length];   
-    } else {
-        jsonPrice = [""];
-    }
-    // Store all results
-    i = 0;
-    if (jsonBiz.length > 0) {
-        do {
-            jsonName[i] = jsonBiz[i].name; 
-            jsonUrl[i] = jsonBiz[i].url;
-            var j = 0;
-            do {
-                if (j == jsonBiz[i].categories.length) {
-                    jsonCat[i] += jsonBiz[i].categories[j].title;   
-                } else if (j == 0) {
-                    jsonCat[i] = jsonBiz[i].categories[0].title;
-                } else {
-                    jsonCat[i] += ", " + jsonBiz[i].categories[j].title;
-                }
-                j++;
-            } while (j<jsonBiz[i].categories.length);
-            jsonImage[i] = jsonBiz[i].image_url;
-            if (jsonImage[i]) {
-                jsonImage[i] = jsonImage[i].replace("ms.jpg","o.jpg");
-            }
-            jsonNumber[i] = jsonBiz[i].phone;
-            jsonRating[i] = jsonBiz[i].rating;
-            jsonMapLat[i] = jsonBiz[i].coordinates.latitude;
-            jsonMapLong[i] = jsonBiz[i].coordinates.longitude;
-            jsonId[i] = jsonBiz[i].id;
-            if (jsonBiz[i].price) {
-                jsonPrice[i] = jsonBiz[i].price.length;
-            } else {
-                jsonPrice[i] = "Not available";
-            }
-            i++;
-        } while (i < jsonBiz.length);
-    }
-    return true;
-};
-
-// Create function to save yelp business output
-const saveYelpBusinessOutput = (data) => {
-    if (data.hours) {
-        const jsonHours = data.hours;
-        jsonIsOpenNow = jsonHours[0].is_open_now; 
-        if (jsonIsOpenNow==true) {
-            jsonIsOpenNow = "Open now."
-        } else {
-            jsonIsOpenNow = "Closed."
-        }
-        var resObj = jsonIsOpenNow;    
-    } else {
-        var resObj = "Unknown status";
-    }
-
-    return resObj;
-};
-
-const updatePriceRange = (data) => {
-    var res = "";
-    switch (data) {
-        case 4:
-            res = '1,2,3,4';
-            break;
-        case 3:
-            res = '1,2,3';
-            break;
-        case 2:
-            res = '1,2';
-            break;
-        case 1:
-            res = '1';
-    }
-    return res;
-}
-
-const updateSortBy = (data) => {
-    var res = "";
-    if (data) {
-        res = "rating";
-    } else {
-        res = "best_match";
-    }
-    return res;
-}
-
-var priceRange = updatePriceRange(priceCeiling);
-
-const updateOffset = () => {
-    offset += 1;
-}
-
-const shuffleYelp = (array) => {
-    for (var i = array.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var temp = jsonName[i];
-        var temp2 = jsonCat[i];
-        var temp3 = jsonImage[i];
-        var temp4 = jsonRating[i];
-        var temp5 = jsonPrice[i];
-        var temp6 = jsonUrl[i];
-        var temp7 = jsonMapLat[i];
-        var temp8 = jsonMapLong[i];
-        var temp9 = jsonId[i];
-
-        jsonName[i] = jsonName[j];
-        jsonName[j] = temp;
-
-        jsonCat[i] = jsonCat[j];
-        jsonCat[j] = temp2;
-
-        jsonImage[i] = jsonImage[j];
-        jsonImage[j] = temp3;
-
-        jsonRating[i] = jsonRating[j];
-        jsonRating[j] = temp4;
-
-
-        jsonPrice[i] = jsonPrice[j];
-        jsonPrice[j] = temp5;
-
-
-        jsonUrl[i] = jsonUrl[j];
-        jsonUrl[j] = temp6;
-
-
-        jsonMapLat[i] = jsonMapLat[j];
-        jsonMapLat[j] = temp7;
-
-
-        jsonMapLong[i] = jsonMapLong[j];
-        jsonMapLong[j] = temp8;
-
-
-        jsonId[i] = jsonId[j];
-        jsonId[j] = temp9;
-    }
-    return true;
-}
-
-// ----------------------------------------------------------------------------
-// Mongodb Codes
-// ----------------------------------------------------------------------------
-var db = mongoose.createConnection(MONGODB_URI);
-var status;
-db.on('error', function(err){
-    if(err) throw err;
-});
-
-db.once('open', function callback () {
-    console.info('Mongo db connected successfully');
-    status = "live";
-});
-
-db.on('disconnected', function callback () {
-    status = "dead";
-});
-
-const schema = mongoose.Schema;    
-const userSessionSchema = new schema({
-    fbid : String,
-    firstName: String,
-    created_at: Date,
-    updated_at: Date
-});
-
-// Add model to mongoose
-const userSession = db.model('userSession', userSessionSchema);
-
-const addOrUpdateUser = (fbid,firstName) => {
-    // if disconnected, reconnect
-    console.log(status);
-    if (status=="dead") {
-        db.open();
-    }
-    // Find user, otherwise save new user
-    // Setup stuff
-    var query = { fbid:fbid },
-        update = { fbid:fbid, firstName: firstName, $setOnInsert: {created_at: new Date()}, updated_at: new Date() },
-        options = { upsert: true, returnNewDocument: true };
-
-    // Find the document
-    userSession.findOneAndUpdate(query, update, options, function(error, result) {
-        if (error) throw error;
-        if (result) {
-            console.log("User session updated!");
-        } else {
-            console.log("User session created!");
-            newUser = true;
-        }
-    });
-}
-
-const userSavedResultsSchema = new schema({
-    fbid : String,
-    resName: String,
-    resCategory: String
-});
-
-// Add model to mongoose
-const userSavedResults = db.model('userSavedResults', userSavedResultsSchema);
-
-const addOrUpdateUserResult = (fbid,resName,resCategory) => {
-    // if disconnected, reconnect
-    console.log(status);
-    if (status=="dead") {
-        db.open();
-    }
-    // Find user, otherwise save new user
-    // Setup stuff
-    var query = { fbid:fbid },
-        update = { fbid:fbid, resName: resName, resCategory:resCategory },
-        options = { upsert: true, returnNewDocument: true };
-
-    // Find the document
-    userSession.findOneAndUpdate(query, update, options, function(error, result) {
-        if (error) throw error;
-        if (result) {
-            console.log("User results updated!");
-        } else {
-            console.log("User results created!");
-        }
-    });
-}
-
-// ----------------------------------------------------------------------------
-// Create standard conversation chunks
-// ----------------------------------------------------------------------------
-const recommendChunk = (sender, message,lat,long,location,wantsOpen,priceRange,food,sortBy,radius) => {
-    if (!food) {
-        food = "";
-    }
-
-    sortBy = updateSortBy(sortBy);
-    
-    fbMessage(sender,message)
-    .then(function(data) {
-        typing(sender);
-        return true;
-    })
-    .then(function (data) {
-        if (lat&long) {
-                return yelp.search({term: food+'food', latitude: lat, longitude: long, open_now: wantsOpen, price: priceRange, sort_by: sortBy, radius: radius, offset: offset*50, limit: 50});
-        } else if (location) {
-                return yelp.search({term: food+'food', location: location, open_now: wantsOpen, priceRange, sort_by: sortBy, radius: radius, offset: offset*50, limit: 50});
-        }
-    })
-    .then(function (data) {
-        if (data) {
-            saveYelpSearchOutput(data);
-            return true;            
-        } else {
-            return false;
-        }
-    })
-    .then(function (data) {
-        if (data) {
-            shuffleYelp(jsonName);
-            return true;
-        } else {
-            return false;
-        }
-    })
-    .then(function (data) {
-        if (data) {
-            while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
-            || jsonCat[responseCounter].indexOf("Convenience")!=-1 
-            || jsonCat[responseCounter].indexOf("Grocery")!=-1
-            || jsonCat[responseCounter].indexOf("Grocer")!=-1) {
-                responseCounter += 1;
-            }
-            if (responseCounter >= jsonName.length) {
-                fbRestartRecommend(sender);
-                responseCounter = 0;
-                exceedResNo = true;
-            } else {
-                saveYelpBusinessOutput(yelpBiz.business(jsonId[responseCounter]));
-            }
-            return true;
-        } else {
-            return false;
-        }
-    })
-    .then(function(data) {
-        if (data) {
-            if (!exceedResNo) {
-                fbYelpTemplate(
-                    sender,
-                    jsonName[responseCounter],
-                    jsonImage[responseCounter],
-                    jsonUrl[responseCounter],
-                    jsonCat[responseCounter],
-                    jsonNumber[responseCounter],
-                    jsonRating[responseCounter],
-                    jsonMapLat[responseCounter],
-                    jsonMapLong[responseCounter],
-                    jsonIsOpenNow,
-                    jsonPrice[responseCounter]
-                );
-                recGiven = true;
-            }    
-        } else {
-            recGiven = false;
-        }
-        recError = false;
-        return true;
-    })                               
-    .catch(function (err) {
-        recError = true;
-        console.error(err);
-        return true;
-    });
-}
-
-const nextRecommendChunk = (sender) => {
-    // This part is to respond to the user's request for other recommendations!
-    if (responseCounter >= jsonName.length) {
-        fbRestartRecommend(sender);
-        responseCounter = 0;
-    } else {
-        var i = responseCounter;
-        i++;
-        responseCounter = i;
-        while (!jsonName[i] || !jsonImage[i] || !jsonUrl[i] || !jsonCat[i] || !jsonNumber[i] || !jsonRating[i]
-            || !jsonMapLat[i] || !jsonMapLong[i]) {
-            i++;
-            if (responseCounter >= jsonName.length) {
-                fbRestartRecommend(sender);
-                responseCounter = 0;
-                break;
-            } else {
-                responseCounter = i;
-            }
-        }
-        if (responseCounter < jsonName.length && responseCounter != 0) {
-            fbMessage(sender, "How about this?")
-            .then(function(data){
-                typing(sender);
-            })
-            .then(function (data) {
-                return yelpBiz.business(jsonId[responseCounter])
-            })
-            .then(function (data) {
-                if (data) {
-                    saveYelpBusinessOutput(data);   
-                    return true;
-                } else {
-                    return false;
-                }
-            })
-            .then(function(data) {
-                if (data) {
-                    if (!exceedResNo) {
-                        fbYelpTemplate(
-                            sender,
-                            jsonName[responseCounter],
-                            jsonImage[responseCounter],
-                            jsonUrl[responseCounter],
-                            jsonCat[responseCounter],
-                            jsonNumber[responseCounter],
-                            jsonRating[responseCounter],
-                            jsonMapLat[responseCounter],
-                            jsonMapLong[responseCounter],
-                            jsonIsOpenNow,
-                            jsonPrice[responseCounter]
-                        );
-                        recGiven = true;
-                    }    
-                } else {
-                    recGiven = false;
-                }
-                recError = false;
-                return true;
-            })   
-            .catch(function(err) {
-                console.error(err);
-                return true;
-            });
-        } 
-    }
-};
 
 // ----------------------------------------------------------------------------
 // App Main Code Body
