@@ -946,6 +946,7 @@ const actions = {
     giveRec({sessionId,context, entities}) {
         console.log('giveRec function called');
         const recipientId = sessions[sessionId].fbid;
+        console.log('lat is:'+lat);
         if (lat && long) {
             return new Promise(function(resolve,reject){
                 typing(recipientId)
