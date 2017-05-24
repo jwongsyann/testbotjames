@@ -964,40 +964,27 @@ const actions = {
                     }
                 })
                 .then(function(data){
-                    if (data) {
                         return shuffleYelp(data);   
-                    } else {
-                        return false;
+                })
+                .then(function(data){ 
+                    while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
+                    || jsonCat[responseCounter].indexOf("Convenience")!=-1 
+                    || jsonCat[responseCounter].indexOf("Grocery")!=-1
+                    || jsonCat[responseCounter].indexOf("Grocer")!=-1) {
+                        responseCounter += 1;
                     }
+                    if (responseCounter >= jsonName.length) {
+                        responseCounter = 0;
+                        exceedResNo = true;
+                    } else {
+                        return yelpBiz.business(jsonId[responseCounter]);
+                    }    
                 })
                 .then(function(data){
-                    if (data) {
-                        while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
-                        || jsonCat[responseCounter].indexOf("Convenience")!=-1 
-                        || jsonCat[responseCounter].indexOf("Grocery")!=-1
-                        || jsonCat[responseCounter].indexOf("Grocer")!=-1) {
-                            responseCounter += 1;
-                        }
-                        if (responseCounter >= jsonName.length) {
-                            responseCounter = 0;
-                            exceedResNo = true;
-                        } else {
-                            return yelpBiz.business(jsonId[responseCounter]);
-                        }    
-                    } else {
-                        return false;
-                    }
-                    
+                    return saveYelpBusinessOutput(data);   
                 })
                 .then(function(data){
-                    if (data) {
-                        return saveYelpBusinessOutput(data);   
-                    } else {
-                        return false;
-                    }
-                })
-                .then(function(data){
-                    if (!exceedResNo & data) {
+                    if (!exceedResNo) {
                         return fbYelpTemplate(
                             recipientId,
                             jsonName[responseCounter],
