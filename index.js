@@ -946,11 +946,11 @@ const actions = {
     giveRec({sessionId,context, entities}) {
         console.log('giveRec function called');
         const recipientId = sessions[sessionId].fbid;
-        if (context.lat && context.long) {
+        if (lat && long) {
             return new Promise(function(resolve,reject){
                 typing(recipientId)
                 .then(function(data){
-                    return yelp.search({term: 'food', latitude: context.lat, longitude: context.long, open_now: wantsOpen, radius: radius, price: priceRange, limit: 50})
+                    return yelp.search({term: 'food', latitude: lat, longitude: long, open_now: wantsOpen, radius: radius, price: priceRange, limit: 50})
                 })
                 .then(function(data){
                     if (data.businesses) {
