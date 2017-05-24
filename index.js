@@ -978,7 +978,6 @@ const actions = {
                             responseCounter += 1;
                         }
                         if (responseCounter >= jsonName.length) {
-                            fbRestartRecommend(recipientId);
                             responseCounter = 0;
                             exceedResNo = true;
                         } else {
