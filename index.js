@@ -65,10 +65,11 @@ if (!YELP_SECRET) { throw new Error('missing YELP_SECRET') }
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) { throw new Error('missing MONGODB_URI') }
 
+/*
 // Google Maps API parameters
 const GOOGLEMAP_KEY = process.env.GOOGLEMAP_KEY;
 if (!GOOGLEMAP_KEY) { throw new Error('missing GOOGLEMAP_KEY') }
-
+*/
 // ----------------------------------------------------------------------------
 // Initialize all other parameters
 // ----------------------------------------------------------------------------
@@ -576,6 +577,7 @@ const saveYelpBusinessOutput = (data) => {
         }
         var resObj = jsonIsOpenNow;    
     } else {
+        jsonIsOpenNow = "Unknown status";
         var resObj = "Unknown status";
     }
 
@@ -947,44 +949,76 @@ const actions = {
         console.log('giveRec function called');
         const recipientId = sessions[sessionId].fbid;
         console.log('lat is:'+lat);
-        if (lat && long) {
+        if (context.lat && context.long) {
             return new Promise(function(resolve,reject){
                 typing(recipientId)
                 .then(function(data){
-                    return yelp.search({term: 'food', latitude: lat, longitude: long, open_now: wantsOpen, radius: radius, price: priceRange, limit: 50})
+                    return yelp.search({term: 'food', latitude: context.lat, longitude: context.long, open_now: wantsOpen, radius: radius, price: priceRange, limit: 50})
                 })
                 .then(function(data){
-                    if (data.businesses) {
+                    if (JSON.parse(data)['businesses'].length!=0) {
+                        context.recGiven = true;
+                        delete context.noRec;
+                        delete context.recError;
                         return saveYelpSearchOutput(data);   
-                    } else {
+                    } else if (JSON.parse(data)['businesses'].length==0) {
                         context.noRec = true;
                         delete context.recGiven;
-                        delete context.missingLocation;
-                        return resolve(context);
+                        delete context.recError;
+                        return false;
+                    } else {
+                        context.recError = true;
+                        delete context.recGiven;
+                        delete context.noRec;
+                        return false
                     }
                 })
                 .then(function(data){
-                        return shuffleYelp(data);   
+                    if (data) {
+                        return shuffleYelp(jsonName);   
+                    } else {
+                        return false;
+                    }
                 })
                 .then(function(data){ 
-                    while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
-                    || jsonCat[responseCounter].indexOf("Convenience")!=-1 
-                    || jsonCat[responseCounter].indexOf("Grocery")!=-1
-                    || jsonCat[responseCounter].indexOf("Grocer")!=-1) {
-                        responseCounter += 1;
-                    }
-                    if (responseCounter >= jsonName.length) {
-                        responseCounter = 0;
-                        exceedResNo = true;
+                    if (data) {
+                        while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
+                        || jsonCat[responseCounter].indexOf("Convenience")!=-1 
+                        || jsonCat[responseCounter].indexOf("Grocery")!=-1
+                        || jsonCat[responseCounter].indexOf("Grocer")!=-1) {
+                            responseCounter += 1;
+                        }
+                        if (responseCounter >= jsonName.length) {
+                            responseCounter = 0;
+                            exceedResNo = true;
+                            return false;
+                        } else {
+                            return yelpBiz.business(jsonId[responseCounter]);
+                        }       
                     } else {
-                        return yelpBiz.business(jsonId[responseCounter]);
-                    }    
+                        return false;
+                    }
+                     
                 })
                 .then(function(data){
-                    return saveYelpBusinessOutput(data);   
+                    if (data) {
+                        return saveYelpBusinessOutput(data);       
+                    } else {
+                        return false;
+                    }
                 })
                 .then(function(data){
-                    if (!exceedResNo) {
+                    if (!exceedResNo && data) {
+                        console.log(jsonName[responseCounter]);
+                        console.log(jsonImage[responseCounter]);
+                        console.log(jsonUrl[responseCounter]);
+                        console.log(jsonCat[responseCounter]);
+                        console.log(jsonNumber[responseCounter]);
+                        console.log(jsonRating[responseCounter]);
+                        console.log(jsonMapLat[responseCounter]);
+                        console.log(jsonMapLong[responseCounter]);
+                        console.log(jsonIsOpenNow);
+                        console.log(jsonPrice[responseCounter]);
                         return fbYelpTemplate(
                             recipientId,
                             jsonName[responseCounter],
@@ -998,12 +1032,11 @@ const actions = {
                             jsonIsOpenNow,
                             jsonPrice[responseCounter]
                         );
+                    } else {
+                        return false;
                     }
                 })
                 .then(function(data){
-                    context.recGiven = true;
-                    delete context.noRec;
-                    delete context.missingLocation;
                     return resolve(context);
                 })
                 .catch(err => {
@@ -1015,6 +1048,7 @@ const actions = {
             context.missingLocation = true;
             delete context.noRec;
             delete context.recGiven;
+            delete context.recError;
             return context;
         }
     },
@@ -1106,17 +1140,17 @@ const actions = {
                     return yelpBiz.business(jsonId[responseCounter])
                 })
                 .then(function(data){
-                    if (data.businesses) {
-                        return saveYelpSearchOutput(data);   
+                    if (data) {
+                        return saveYelpBusinessOutput(data);       
                     } else {
-                        context.noRec = true;
-                        delete context.recGiven;
-                        delete context.missingLocation;
-                        return resolve(context);
+                        return false;
                     }
                 })
-                .then(function(data) {
-                    if (!exceedResNo) {
+                .then(function(data){
+                    if (!exceedResNo && data) {
+                        context.recGiven = true;
+                        delete context.noRec;
+                        delete context.recError;
                         return fbYelpTemplate(
                             recipientId,
                             jsonName[responseCounter],
@@ -1130,18 +1164,19 @@ const actions = {
                             jsonIsOpenNow,
                             jsonPrice[responseCounter]
                         );
-                    }    
+                    } else {
+                        context.noRec = true;
+                        delete context.recGiven;
+                        delete context.recError;
+                        return false;
+                    }
                 })
                 .then(function(data){
-                    context.recGiven = true;
-                    delete context.noRec;
                     return resolve(context);
                 })
                 .catch(err => {
                     console.error(err);
-                    context.noRec = true;
-                    delete context.recGiven;
-                    return resolve(context);
+                    return reject(context);
                 });
             });
         }
