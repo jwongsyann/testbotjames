@@ -89,10 +89,13 @@ var jsonCat = '';
 var jsonImage = '';
 var jsonNumber = '';
 var jsonRating = '';
+var jsonAddress = ''; 
+var jsonAddress2 = ''; 
 var jsonMapLat = '';
 var jsonMapLong = '';
 var jsonId = '';
 var jsonPrice = '';
+var jsonPriceSym = '';
 var jsonIsOpenNow = '';
 var recGiven = false;
 var recError = false;
@@ -258,7 +261,7 @@ const fbAskForLocation = (id, message) => {
 }
 
 // Generic template for one input from Yelp Api
-const fbYelpTemplate = (id, name, image_url, url, category, phone_number, rating, map_lat, map_long, is_open_now, price) => {
+const fbYelpTemplate = (id, name, image_url, url, category, phone_number, rating, map_lat, map_long, price, is_open_now) => {
     const body = JSON.stringify({
         recipient: { id },
         message: {
@@ -266,33 +269,41 @@ const fbYelpTemplate = (id, name, image_url, url, category, phone_number, rating
                 type: "template",
                 payload: {
                     template_type: "generic",
-                    elements: 
-                    [
-                    {
-                        title: name,
-                        image_url: image_url,
-                        subtitle: category + "\nRating:" + rating +"🌟" + "\nPricing:"+price+"💰\n"+is_open_now,
-                        buttons: 
-                        [
-                        {
+				//image_aspect_ratio for changing picture size - "horizontal" or "square"
+					image_aspect_ratio:"horizontal",
+                    elements:  [
+					    {
+							title: name ,
+							image_url: image_url,
+							subtitle: category+"|"+ "🏃dist:" + "\n "+ "\nRating:" + rating +"👍" + "\nPrice range:"+price,
+					    buttons: 
+						[
+	                        {
+	                            type: "web_url",
+	                            title: " Get directions 🏃",
+	                            url: "http:\/\/maps.apple.com\/maps?q="+map_lat+","+map_long+"&z=16"
+	                        },
+					    {
                             type: "web_url",
                             url: url,
-                            title: "View website "
+                            title: "See reviews 💬",
+   							webview_height_ratio:"full"
                         },
-                         {
-                         	type: "element_share"
-                         },
+                        {
+                            type: "postback",
+                            title: "Opening hours🚪",
+                            payload: "phone_number"
+                        },
+                         // {
+                         // 	type: "element_share"
+                         // },
 						 // {
 						 // 							 type: "phone_number",
 						 // 							 title: "Call",
 						 // 							 payload: phone_number
 						 // },
-                        {
-                            type: "web_url",
-                            title: "Show Map",
-                            url: "http:\/\/maps.apple.com\/maps?q="+map_lat+","+map_long+"&z=16"           
-                        }
-                        ]
+                       
+					]
                     }
                     ]
                 }
@@ -520,6 +531,8 @@ const saveYelpSearchOutput = (data) => {
     jsonImage = [jsonBiz[0].image_url];
     jsonNumber = [jsonBiz[0].phone];
     jsonRating = [jsonBiz[0].rating];
+	jsonAddress=[jsonBiz[0].location.address1];
+	jsonAddress2=[jsonBiz[0].location.address2];
     jsonMapLat = [jsonBiz[0].coordinates.latitude];
     jsonMapLong = [jsonBiz[0].coordinates.longitude];
     jsonId = [jsonBiz[0].id];
@@ -528,6 +541,18 @@ const saveYelpSearchOutput = (data) => {
     } else {
         jsonPrice = [""];
     }
+    if (jsonBiz[0].price.length==1) {
+        jsonPriceSym = ["💵💰"];   
+    } else if (jsonBiz[0].price.length==2){
+        jsonPriceSym = ["💵💰💰"];
+    } else if (jsonBiz[0].price.length==3){
+        jsonPriceSym = ["💵💰💰💰"];
+	}	else if (jsonBiz[0].price.length==4){
+        jsonPriceSym = ["💵💰💰💰💰"];
+	}else {
+		jsonPriceSym = [""];
+	}
+		
     // Store all results
     i = 0;
     if (jsonBiz.length > 0) {
@@ -551,6 +576,8 @@ const saveYelpSearchOutput = (data) => {
             }
             jsonNumber[i] = jsonBiz[i].phone;
             jsonRating[i] = jsonBiz[i].rating;
+			jsonAddress[i] = jsonBiz[i].location.address1;
+			jsonAddress2[i] = jsonBiz[i].location.address2;
             jsonMapLat[i] = jsonBiz[i].coordinates.latitude;
             jsonMapLong[i] = jsonBiz[i].coordinates.longitude;
             jsonId[i] = jsonBiz[i].id;
@@ -630,6 +657,8 @@ const shuffleYelp = (array) => {
         var temp7 = jsonMapLat[i];
         var temp8 = jsonMapLong[i];
         var temp9 = jsonId[i];
+		var temp10 = jsonAddress[i];
+		var temp11 = jsonAddress2[i];
 
         jsonName[i] = jsonName[j];
         jsonName[j] = temp;
@@ -662,6 +691,12 @@ const shuffleYelp = (array) => {
 
         jsonId[i] = jsonId[j];
         jsonId[j] = temp9;
+		
+        jsonAddress[i] = jsonAddress[j];
+        jsonAddress[j] = temp10;
+		
+        jsonAddress2[i] = jsonAddress2[j];
+        jsonAddress2[j] = temp11;
     }
     return true;
 }
@@ -1015,6 +1050,8 @@ const actions = {
                         console.log(jsonCat[responseCounter]);
                         console.log(jsonNumber[responseCounter]);
                         console.log(jsonRating[responseCounter]);
+						console.log(jsonAddress2[responseCounter]);
+						console.log(jsonAddress[responseCounter]);
                         console.log(jsonMapLat[responseCounter]);
                         console.log(jsonMapLong[responseCounter]);
                         console.log(jsonIsOpenNow);
@@ -1027,10 +1064,12 @@ const actions = {
                             jsonCat[responseCounter],
                             jsonNumber[responseCounter],
                             jsonRating[responseCounter],
+						// jsonAddress2[responseCounter],
+					// 		jsonAddress[responseCounter],
                             jsonMapLat[responseCounter],
                             jsonMapLong[responseCounter],
-                            jsonIsOpenNow,
-                            jsonPrice[responseCounter]
+                            jsonPriceSym[responseCounter],
+						 	jsonIsOpenNow
                         );
                     } else {
                         return false;
@@ -1159,10 +1198,12 @@ const actions = {
                             jsonCat[responseCounter],
                             jsonNumber[responseCounter],
                             jsonRating[responseCounter],
+						//	 jsonAddress2[responseCounter],
+					// 		jsonAddress[responseCounter],
                             jsonMapLat[responseCounter],
                             jsonMapLong[responseCounter],
-                            jsonIsOpenNow,
-                            jsonPrice[responseCounter]
+                            jsonPriceSym[responseCounter], 
+							jsonIsOpenNow
                         );
                     } else {
                         context.noRec = true;
