@@ -1311,7 +1311,7 @@ app.post('/webhook', (req, res) => {
                                 wit.runActions(
                                     sessionId, // the user's current session
                                     payloadText, // the user's message
-                                    "", // the user's current session state
+                                    sessions[sessionId].context, // the user's current session state
                                     MAX_STEPS
                                 )
                                 .then((context) => {
