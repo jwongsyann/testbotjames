@@ -982,11 +982,13 @@ const actions = {
                 })
                 .then(function(data){ 
                     if (data) {
-                        while (!jsonName[i] || !jsonImage[i] || !jsonUrl[i] || !jsonNumber[i] || !jsonRating[i]
-                        || !jsonMapLat[i] || !jsonMapLong[i] || jsonCat[i].indexOf("Supermarkets")!=-1 
-                        || jsonCat[i].indexOf("Convenience")!=-1 
-                        || jsonCat[i].indexOf("Grocery")!=-1
-                        || jsonCat[i].indexOf("Grocer")!=-1) {
+                        while (!jsonName[responseCounter] || !jsonImage[responseCounter] 
+                        || !jsonUrl[responseCounter] || !jsonNumber[responseCounter] || !jsonRating[responseCounter]
+                        || !jsonMapLat[responseCounter] || !jsonMapLong[responseCounter] 
+                        || jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
+                        || jsonCat[responseCounter].indexOf("Convenience")!=-1 
+                        || jsonCat[responseCounter].indexOf("Grocery")!=-1
+                        || jsonCat[responseCounter].indexOf("Grocer")!=-1) {
                             responseCounter += 1;
                         }
                         if (responseCounter >= jsonName.length) {
