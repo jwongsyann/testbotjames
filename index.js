@@ -982,15 +982,18 @@ const actions = {
                 })
                 .then(function(data){ 
                     if (data) {
-                        while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
-                        || jsonCat[responseCounter].indexOf("Convenience")!=-1 
-                        || jsonCat[responseCounter].indexOf("Grocery")!=-1
-                        || jsonCat[responseCounter].indexOf("Grocer")!=-1) {
+                        while (!jsonName[i] || !jsonImage[i] || !jsonUrl[i] || !jsonNumber[i] || !jsonRating[i]
+                        || !jsonMapLat[i] || !jsonMapLong[i] || jsonCat[i].indexOf("Supermarkets")!=-1 
+                        || jsonCat[i].indexOf("Convenience")!=-1 
+                        || jsonCat[i].indexOf("Grocery")!=-1
+                        || jsonCat[i].indexOf("Grocer")!=-1) {
                             responseCounter += 1;
                         }
                         if (responseCounter >= jsonName.length) {
                             responseCounter = 0;
-                            exceedResNo = true;
+                            context.noRec=true;
+                            delete context.recGiven;
+                            delete context.recError;
                             return false;
                         } else {
                             return yelpBiz.business(jsonId[responseCounter]);
@@ -1008,17 +1011,7 @@ const actions = {
                     }
                 })
                 .then(function(data){
-                    if (!exceedResNo && data) {
-                        console.log(jsonName[responseCounter]);
-                        console.log(jsonImage[responseCounter]);
-                        console.log(jsonUrl[responseCounter]);
-                        console.log(jsonCat[responseCounter]);
-                        console.log(jsonNumber[responseCounter]);
-                        console.log(jsonRating[responseCounter]);
-                        console.log(jsonMapLat[responseCounter]);
-                        console.log(jsonMapLong[responseCounter]);
-                        console.log(jsonIsOpenNow);
-                        console.log(jsonPrice[responseCounter]);
+                    if (data) {
                         return fbYelpTemplate(
                             recipientId,
                             jsonName[responseCounter],
@@ -1111,21 +1104,30 @@ const actions = {
 
         if (responseCounter >= jsonName.length) {
             // NEED TO HANDLE THIS PART VIA WIT
+            
+            context.allRecGiven=true;
+            delete context.recGiven;
+            /*
             fbRestartRecommend(recipientId);
+            */
             responseCounter = 0;
         } else {
             var i = responseCounter;
             i++;
             responseCounter = i;
             while (!jsonName[i] || !jsonImage[i] || !jsonUrl[i] || !jsonNumber[i] || !jsonRating[i]
-                || !jsonMapLat[i] || !jsonMapLong[i] || jsonCat[i].indexOf("Supermarkets")!=-1 
-                || jsonCat[i].indexOf("Convenience")!=-1 
-                || jsonCat[i].indexOf("Grocery")!=-1
-                || jsonCat[i].indexOf("Grocer")!=-1) {
+            || !jsonMapLat[i] || !jsonMapLong[i] || jsonCat[i].indexOf("Supermarkets")!=-1 
+            || jsonCat[i].indexOf("Convenience")!=-1 
+            || jsonCat[i].indexOf("Grocery")!=-1
+            || jsonCat[i].indexOf("Grocer")!=-1) {
                 i++;
                 if (responseCounter >= jsonName.length) {
                     // NEED TO HANDLE THIS PART VIA WIT
+                    context.allRecGiven = true;
+                    delete context.recGiven;
+                    /*
                     fbRestartRecommend(recipientId);
+                    */
                     responseCounter = 0;
                     break;
                 } else {
@@ -1133,25 +1135,19 @@ const actions = {
                 }
             }
         }
-        if (responseCounter < jsonName.length && responseCounter != 0) {
+        if (context.allRecGiven) {
+            return context;
+        } else if (responseCounter < jsonName.length && responseCounter != 0) {
             return new Promise(function(resolve,reject){
                 typing(recipientId)
                 .then(function (data) {
                     return yelpBiz.business(jsonId[responseCounter])
                 })
                 .then(function(data){
-                    if (data) {
-                        return saveYelpBusinessOutput(data);       
-                    } else {
-                        return false;
-                    }
+                    return saveYelpBusinessOutput(data);       
                 })
                 .then(function(data){
-                    if (!exceedResNo && data) {
-                        context.recGiven = true;
-                        delete context.noRec;
-                        delete context.recError;
-                        return fbYelpTemplate(
+                    return fbYelpTemplate(
                             recipientId,
                             jsonName[responseCounter],
                             jsonImage[responseCounter],
@@ -1163,16 +1159,9 @@ const actions = {
                             jsonMapLong[responseCounter],
                             jsonIsOpenNow,
                             jsonPrice[responseCounter]
-                        );
-                    } else {
-                        context.noRec = true;
-                        delete context.recGiven;
-                        delete context.recError;
-                        return false;
-                    }
+                    );
                 })
                 .then(function(data){
-                    console.log(context);
                     return resolve(context);
                 })
                 .catch(err => {
