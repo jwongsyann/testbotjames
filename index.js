@@ -1306,7 +1306,9 @@ app.post('/webhook', (req, res) => {
                             // We received an attachment
                             // First need to identify if attachment was a shared location
                             if (attachments[0].type=="location") {
-
+                                lat = attachments[0].payload.coordinates.lat;
+                                long = attachments[0].payload.coordinates.long;
+                                console.log('received coords:'+"lat:"+lat+"&long:"+long);
                                 const payloadText = "specialactivationforlocation"
                                 wit.runActions(
                                     sessionId, // the user's current session
