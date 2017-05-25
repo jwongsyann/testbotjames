@@ -1307,7 +1307,7 @@ app.post('/webhook', (req, res) => {
                             // First need to identify if attachment was a shared location
                             if (attachments[0].type=="location") {
 
-                                payloadText = "specialactivationforlocation"
+                                const payloadText = "specialactivationforlocation"
                                 wit.runActions(
                                     sessionId, // the user's current session
                                     payloadText, // the user's message
