@@ -1307,6 +1307,37 @@ app.post('/webhook', (req, res) => {
                             // First need to identify if attachment was a shared location
                             if (attachments[0].type=="location") {
 
+                                payloadText = "specialactivationforlocation"
+                                wit.runActions(
+                                    sessionId, // the user's current session
+                                    payloadText, // the user's message
+                                    "", // the user's current session state
+                                    MAX_STEPS
+                                )
+                                .then((context) => {
+                                    // Our bot did everything it has to do.
+                                    // Now it's waiting for further messages to proceed.
+                                    console.log('Waiting for next user messages');
+
+                                    // Based on the session state, you might want to reset the session.
+                                    // This depends heavily on the business logic of your bot.
+                                    // Example:
+
+                                    if (context.done) {
+                                        delete sessions[sessionId];
+                                        delete context.resName;
+                                        delete context.done;
+                                        resetParams();
+                                    } else {
+                                        // Updating the user's current session state
+                                        sessions[sessionId].context = context;
+                                    }
+                                    
+                                })
+                                .catch((err) => {
+                                    console.error('Oops! Got an error from Wit: ', err.stack || err);
+                                })
+
                                 /*
                                 // Save lat and long
                                 lat = attachments[0].payload.coordinates.lat;
