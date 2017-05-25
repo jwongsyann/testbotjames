@@ -1307,12 +1307,15 @@ app.post('/webhook', (req, res) => {
                             // First need to identify if attachment was a shared location
                             if (attachments[0].type=="location") {
 
+                                /*
                                 // Save lat and long
                                 lat = attachments[0].payload.coordinates.lat;
                                 long = attachments[0].payload.coordinates.long;
                                 console.log('received coords:'+"lat:"+lat+"&long:"+long);
                                 
                                 fbGoMessage(sender,"Ok, ready to start?");
+                                */
+
                                 /*                                
                                 // Run lat and long through to yelp api
                                 const message = "How about this?"
