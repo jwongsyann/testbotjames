@@ -1306,6 +1306,8 @@ app.post('/webhook', (req, res) => {
                             // We received an attachment
                             // First need to identify if attachment was a shared location
                             if (attachments[0].type=="location") {
+
+                                /*
                                 lat = attachments[0].payload.coordinates.lat;
                                 long = attachments[0].payload.coordinates.long;
                                 console.log('received coords:'+"lat:"+lat+"&long:"+long);
@@ -1339,15 +1341,15 @@ app.post('/webhook', (req, res) => {
                                 .catch((err) => {
                                     console.error('Oops! Got an error from Wit: ', err.stack || err);
                                 })
-
-                                /*
+                                */
+                                
                                 // Save lat and long
                                 lat = attachments[0].payload.coordinates.lat;
                                 long = attachments[0].payload.coordinates.long;
                                 console.log('received coords:'+"lat:"+lat+"&long:"+long);
                                 
                                 fbGoMessage(sender,"Ok, ready to start?");
-                                */
+                                
 
                                 /*                                
                                 // Run lat and long through to yelp api
