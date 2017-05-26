@@ -623,6 +623,7 @@ const updatePriceSym = (data) => {
             break;
         case 1:
             res = "💵💰";
+            break;
         default:
             res = "Unknown!"
     }
@@ -660,7 +661,6 @@ const shuffleYelp = (array) => {
         var temp9 = jsonId[i];
 		var temp10 = jsonAddress[i];
 		var temp11 = jsonAddress2[i];
-        var temp12 = jsonPriceSym[i];
 
         jsonName[i] = jsonName[j];
         jsonName[j] = temp;
@@ -1179,7 +1179,6 @@ const actions = {
         if (context.allRecGiven) {
             return context;
         } else if (responseCounter < jsonName.length && responseCounter != 0) {
-            console.log('this code runs');
             return new Promise(function(resolve,reject){
                 typing(recipientId)
                 .then(function (data) {
