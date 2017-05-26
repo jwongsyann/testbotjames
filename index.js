@@ -1017,7 +1017,10 @@ const actions = {
                 })
                 .then(function(data){ 
                     if (data) {
-                        while (jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
+                        while (!jsonName[responseCounter] || !jsonImage[responseCounter] 
+                        || !jsonUrl[responseCounter] || !jsonNumber[responseCounter] || !jsonRating[responseCounter]
+                        || !jsonMapLat[responseCounter] || !jsonMapLong[responseCounter] 
+                        || jsonCat[responseCounter].indexOf("Supermarkets")!=-1 
                         || jsonCat[responseCounter].indexOf("Convenience")!=-1 
                         || jsonCat[responseCounter].indexOf("Grocery")!=-1
                         || jsonCat[responseCounter].indexOf("Grocer")!=-1) {
@@ -1025,7 +1028,9 @@ const actions = {
                         }
                         if (responseCounter >= jsonName.length) {
                             responseCounter = 0;
-                            exceedResNo = true;
+                            context.noRec=true;
+                            delete context.recGiven;
+                            delete context.recError;
                             return false;
                         } else {
                             return yelpBiz.business(jsonId[responseCounter]);
@@ -1043,19 +1048,7 @@ const actions = {
                     }
                 })
                 .then(function(data){
-                    if (!exceedResNo && data) {
-                        console.log(jsonName[responseCounter]);
-                        console.log(jsonImage[responseCounter]);
-                        console.log(jsonUrl[responseCounter]);
-                        console.log(jsonCat[responseCounter]);
-                        console.log(jsonNumber[responseCounter]);
-                        console.log(jsonRating[responseCounter]);
-						console.log(jsonAddress2[responseCounter]);
-						console.log(jsonAddress[responseCounter]);
-                        console.log(jsonMapLat[responseCounter]);
-                        console.log(jsonMapLong[responseCounter]);
-                        console.log(jsonIsOpenNow);
-                        console.log(jsonPrice[responseCounter]);
+                    if (data) {
                         return fbYelpTemplate(
                             recipientId,
                             jsonName[responseCounter],
@@ -1150,21 +1143,30 @@ const actions = {
 
         if (responseCounter >= jsonName.length) {
             // NEED TO HANDLE THIS PART VIA WIT
+            
+            context.allRecGiven=true;
+            delete context.recGiven;
+            /*
             fbRestartRecommend(recipientId);
+            */
             responseCounter = 0;
         } else {
             var i = responseCounter;
             i++;
             responseCounter = i;
             while (!jsonName[i] || !jsonImage[i] || !jsonUrl[i] || !jsonNumber[i] || !jsonRating[i]
-                || !jsonMapLat[i] || !jsonMapLong[i] || jsonCat[i].indexOf("Supermarkets")!=-1 
-                || jsonCat[i].indexOf("Convenience")!=-1 
-                || jsonCat[i].indexOf("Grocery")!=-1
-                || jsonCat[i].indexOf("Grocer")!=-1) {
+            || !jsonMapLat[i] || !jsonMapLong[i] || jsonCat[i].indexOf("Supermarkets")!=-1 
+            || jsonCat[i].indexOf("Convenience")!=-1 
+            || jsonCat[i].indexOf("Grocery")!=-1
+            || jsonCat[i].indexOf("Grocer")!=-1) {
                 i++;
                 if (responseCounter >= jsonName.length) {
                     // NEED TO HANDLE THIS PART VIA WIT
+                    context.allRecGiven = true;
+                    delete context.recGiven;
+                    /*
                     fbRestartRecommend(recipientId);
+                    */
                     responseCounter = 0;
                     break;
                 } else {
@@ -1172,25 +1174,19 @@ const actions = {
                 }
             }
         }
-        if (responseCounter < jsonName.length && responseCounter != 0) {
+        if (context.allRecGiven) {
+            return context;
+        } else if (responseCounter < jsonName.length && responseCounter != 0) {
             return new Promise(function(resolve,reject){
                 typing(recipientId)
                 .then(function (data) {
                     return yelpBiz.business(jsonId[responseCounter])
                 })
                 .then(function(data){
-                    if (data) {
-                        return saveYelpBusinessOutput(data);       
-                    } else {
-                        return false;
-                    }
+                    return saveYelpBusinessOutput(data);       
                 })
                 .then(function(data){
-                    if (!exceedResNo && data) {
-                        context.recGiven = true;
-                        delete context.noRec;
-                        delete context.recError;
-                        return fbYelpTemplate(
+                    return fbYelpTemplate(
                             recipientId,
                             jsonName[responseCounter],
                             jsonImage[responseCounter],
@@ -1203,14 +1199,9 @@ const actions = {
                             jsonMapLat[responseCounter],
                             jsonMapLong[responseCounter],
                             jsonPriceSym[responseCounter], 
-							jsonIsOpenNow
-                        );
-                    } else {
-                        context.noRec = true;
-                        delete context.recGiven;
-                        delete context.recError;
-                        return false;
-                    }
+							              jsonIsOpenNow
+                    );
+            
                 })
                 .then(function(data){
                     return resolve(context);
@@ -1347,12 +1338,50 @@ app.post('/webhook', (req, res) => {
                             // First need to identify if attachment was a shared location
                             if (attachments[0].type=="location") {
 
+                                /*
+                                lat = attachments[0].payload.coordinates.lat;
+                                long = attachments[0].payload.coordinates.long;
+                                console.log('received coords:'+"lat:"+lat+"&long:"+long);
+                                const payloadText = "specialactivationforlocation"
+                                wit.runActions(
+                                    sessionId, // the user's current session
+                                    payloadText, // the user's message
+                                    sessions[sessionId].context, // the user's current session state
+                                    MAX_STEPS
+                                )
+                                .then((context) => {
+                                    // Our bot did everything it has to do.
+                                    // Now it's waiting for further messages to proceed.
+                                    console.log('Waiting for next user messages');
+
+                                    // Based on the session state, you might want to reset the session.
+                                    // This depends heavily on the business logic of your bot.
+                                    // Example:
+
+                                    if (context.done) {
+                                        delete sessions[sessionId];
+                                        delete context.resName;
+                                        delete context.done;
+                                        resetParams();
+                                    } else {
+                                        // Updating the user's current session state
+                                        sessions[sessionId].context = context;
+                                    }
+                                    
+                                })
+                                .catch((err) => {
+                                    console.error('Oops! Got an error from Wit: ', err.stack || err);
+                                })
+                                */
+                                
                                 // Save lat and long
                                 lat = attachments[0].payload.coordinates.lat;
                                 long = attachments[0].payload.coordinates.long;
                                 console.log('received coords:'+"lat:"+lat+"&long:"+long);
                                 
                                 fbGoMessage(sender,"Ok, ready to start?");
+                                
+
                                 /*                                
                                 // Run lat and long through to yelp api
                                 const message = "How about this?"
