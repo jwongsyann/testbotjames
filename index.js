@@ -532,19 +532,6 @@ const saveYelpSearchOutput = (data) => {
     } else {
         jsonPrice = [""];
     }
-
-    // Consider changing to switch function here!
-    if (jsonBiz[0].price.length==1) {
-        jsonPriceSym = ["💵💰"];   
-    } else if (jsonBiz[0].price.length==2){
-        jsonPriceSym = ["💵💰💰"];
-    } else if (jsonBiz[0].price.length==3){
-        jsonPriceSym = ["💵💰💰💰"];
-	}	else if (jsonBiz[0].price.length==4){
-        jsonPriceSym = ["💵💰💰💰💰"];
-	}else {
-		jsonPriceSym = [""];
-	}
 		
     // Store all results
     i = 0;
@@ -622,6 +609,26 @@ const updatePriceRange = (data) => {
     return res;
 }
 
+const updatePriceSym = (data) => {
+    var res = "";
+    switch (data) {
+        case 4:
+            res = "💵💰💰💰💰";
+            break;
+        case 3:
+            res = "💵💰💰💰";
+            break;
+        case 2:
+            res = "💵💰💰";
+            break;
+        case 1:
+            res = "💵💰";
+        default:
+            res = "Unknown!"
+    }
+    return res;
+}
+
 const updateSortBy = (data) => {
     var res = "";
     if (data) {
@@ -692,9 +699,6 @@ const shuffleYelp = (array) => {
 		
         jsonAddress2[i] = jsonAddress2[j];
         jsonAddress2[j] = temp11;
-
-        jsonPriceSym[i] = jsonPriceSym[j];
-        jsonPriceSym[j] = temp12;
     }
     return true;
 }
@@ -1059,7 +1063,7 @@ const actions = {
 					// 		jsonAddress[responseCounter],
                             jsonMapLat[responseCounter],
                             jsonMapLong[responseCounter],
-                            jsonPriceSym[responseCounter],
+                            updatePriceSym(jsonPrice[responseCounter]),
 						 	jsonIsOpenNow
                         );
                     } else {
@@ -1197,7 +1201,7 @@ const actions = {
 					// 		jsonAddress[responseCounter],
                             jsonMapLat[responseCounter],
                             jsonMapLong[responseCounter],
-                            jsonPriceSym[responseCounter], 
+                            updatePriceSym(jsonPrice[responseCounter]), 
 							jsonIsOpenNow
                     );
             
