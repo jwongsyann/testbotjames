@@ -613,16 +613,16 @@ const updatePriceSym = (data) => {
     var res = "";
     switch (data) {
         case 4:
-            res = "💵💰💰💰💰";
+            res = "💰💰💰💰";
             break;
         case 3:
-            res = "💵💰💰💰";
+            res = "💰💰💰";
             break;
         case 2:
-            res = "💵💰💰";
+            res = "💰💰";
             break;
         case 1:
-            res = "💵💰";
+            res = "💰";
             break;
         default:
             res = "Unknown!"
@@ -1188,7 +1188,6 @@ const actions = {
                     return saveYelpBusinessOutput(data);       
                 })
                 .then(function(data){
-                    console.log(jsonPrice[responseCounter]);
                     return fbYelpTemplate(
                             recipientId,
                             jsonName[responseCounter],
@@ -1204,9 +1203,10 @@ const actions = {
                             updatePriceSym(jsonPrice[responseCounter]), 
 							jsonIsOpenNow
                     );
-            
                 })
                 .then(function(data){
+                    context.recGiven=true;
+                    delete context.allRecGiven;
                     return resolve(context);
                 })
                 .catch(err => {
