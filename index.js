@@ -276,35 +276,26 @@ const fbYelpTemplate = (id, name, image_url, url, category, phone_number, rating
 							title: name ,
 							image_url: image_url,
 							subtitle: category+"|"+ "🏃dist:" + "\n "+ "\nRating:" + rating +"👍" + "\nPrice range:"+price,
-					    buttons: 
-						[
-	                        {
-	                            type: "web_url",
-	                            title: " Get directions 🏃",
-	                            url: "http:\/\/maps.apple.com\/maps?q="+map_lat+","+map_long+"&z=16"
-	                        },
-					    {
-                            type: "web_url",
-                            url: url,
-                            title: "See reviews 💬",
-   							webview_height_ratio:"full"
-                        },
-                        {
-                            type: "postback",
-                            title: "Opening hours🚪",
-                            payload: "phone_number"
-                        },
-                         // {
-                         // 	type: "element_share"
-                         // },
-						 // {
-						 // 							 type: "phone_number",
-						 // 							 title: "Call",
-						 // 							 payload: phone_number
-						 // },
-                       
-					]
-                    }
+    					    buttons: 
+    						[
+    	                        {
+    	                            type: "web_url",
+    	                            title: " Get directions 🏃",
+    	                            url: "http:\/\/maps.apple.com\/maps?q="+map_lat+","+map_long+"&z=16"
+    	                        },
+        					    {
+                                    type: "web_url",
+                                    url: url,
+                                    title: "See reviews 💬",
+           							webview_height_ratio:"full"
+                                },
+                                {
+                                    type: "postback",
+                                    title: "Opening hours🚪",
+                                    payload: "phone_number"
+                                }
+    					    ]
+                        }
                     ]
                 }
             }
@@ -541,6 +532,8 @@ const saveYelpSearchOutput = (data) => {
     } else {
         jsonPrice = [""];
     }
+
+    // Consider changing to switch function here!
     if (jsonBiz[0].price.length==1) {
         jsonPriceSym = ["💵💰"];   
     } else if (jsonBiz[0].price.length==2){
@@ -645,6 +638,7 @@ const updateOffset = () => {
     offset += 1;
 }
 
+// Need to find a better shuffle algo
 const shuffleYelp = (array) => {
     for (var i = array.length - 1; i > 0; i--) {
         var j = Math.floor(Math.random() * (i + 1));
@@ -659,6 +653,7 @@ const shuffleYelp = (array) => {
         var temp9 = jsonId[i];
 		var temp10 = jsonAddress[i];
 		var temp11 = jsonAddress2[i];
+        var temp12 = jsonPriceSym[i];
 
         jsonName[i] = jsonName[j];
         jsonName[j] = temp;
@@ -697,6 +692,9 @@ const shuffleYelp = (array) => {
 		
         jsonAddress2[i] = jsonAddress2[j];
         jsonAddress2[j] = temp11;
+
+        jsonPriceSym[i] = jsonPriceSym[j];
+        jsonPriceSym[j] = temp12;
     }
     return true;
 }
@@ -1177,6 +1175,7 @@ const actions = {
         if (context.allRecGiven) {
             return context;
         } else if (responseCounter < jsonName.length && responseCounter != 0) {
+            console.log('this code runs');
             return new Promise(function(resolve,reject){
                 typing(recipientId)
                 .then(function (data) {
@@ -1199,7 +1198,7 @@ const actions = {
                             jsonMapLat[responseCounter],
                             jsonMapLong[responseCounter],
                             jsonPriceSym[responseCounter], 
-							              jsonIsOpenNow
+							jsonIsOpenNow
                     );
             
                 })
