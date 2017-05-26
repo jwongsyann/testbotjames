@@ -1189,6 +1189,7 @@ const actions = {
                     return saveYelpBusinessOutput(data);       
                 })
                 .then(function(data){
+                    console.log(jsonPrice[responseCounter]);
                     return fbYelpTemplate(
                             recipientId,
                             jsonName[responseCounter],
