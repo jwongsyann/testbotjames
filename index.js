@@ -1042,7 +1042,12 @@ const actions = {
                 })
                 .catch(err => {
                     console.error(err);
-                    return reject(context);
+                    delete context.recGiven;
+                    delete context.noRec;
+                    context.recError = true;
+                    noRec = false;
+                    recGiven = false;
+                    return resolve(context);
                 });
             });
         } else {
