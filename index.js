@@ -378,25 +378,7 @@ const fbWitMessage = (id, data) => {
 
 // General FB quick replies for other suggestions that includes a handler for wantsOpen, wantsLowPrice, wantsHighRating
 const fbNextChoicePref = (id, pref) => {
-    if (pref=="wantsOpen") {
-        var quick_replies = [
-        {
-            "content_type":"text",
-            "title":"Nay👎🏼",
-            "payload":"nextChoice"
-        },
-        {
-            "content_type":"text",
-            "title":"Um.. it's closed...",
-            "payload":"endConv" 
-        },
-        {
-            "content_type":"text",
-            "title":"Yay👍🏼",
-            "payload":"endConv" 
-        }
-        ];
-    } else if (pref=="wantsLowPrice") {
+    if (pref=="wantsLowPrice") {
         var quick_replies = [
         {
             "content_type":"text",
@@ -438,42 +420,6 @@ const fbNextChoicePref = (id, pref) => {
         message: {
             text:"Love my recommendation?",
             quick_replies: quick_replies
-        }
-    });
-    const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
-    return fetch('https://graph.facebook.com/me/messages?' + qs, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body,
-    })
-    .then(rsp => rsp.json())
-    .then(json => {
-        if (json.error && json.error.message) {
-            throw new Error(json.error.message);
-        }
-        return json;
-    });
-};
-
-// General FB quick replies for other suggestions.
-const fbRestartRecommend = (id) => {
-    const body = JSON.stringify({
-        recipient: {id},
-        message: {
-            text: "That's all I have! Shall I go back to the first recommendation? Or should I enlarge the search area?",
-            quick_replies: 
-            [
-            {
-                "content_type":"text",
-                "title":"Back to first!",
-                "payload":"restartRecommend"
-            },
-            {
-                "content_type":"text",
-                "title":"Enlarge search area",
-                "payload":"enlargeSearch"
-            }
-            ]
         }
     });
     const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
@@ -1128,9 +1074,7 @@ const actions = {
             const recipientId = sessions[sessionId].fbid;
             console.log('checkForUserPref function called');
             if (!exceedResNo & context.recGiven) {
-                if (jsonIsOpenNow=="Closed.") {
-                    fbNextChoicePref(recipientId,"wantsOpen");
-                } else if (jsonPrice[responseCounter]>=priceCeiling) {
+                if (jsonPrice[responseCounter]>=priceCeiling) {
                     fbNextChoicePref(recipientId,"wantsLowPrice")
                 } else if (jsonRating[responseCounter]<=ratingFloor) {
                     fbNextChoicePref(recipientId,"wantsHighRating")
@@ -1257,16 +1201,6 @@ const actions = {
             wantsLowPrice=false;
             priceCeiling = 4;
             priceRange = updatePriceRange(priceCeiling);
-            return resolve(context);
-        });
-    },
-
-    changeOpenPref({sessionId,context, entities}) {
-        return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
-            console.log('changeExpensivePref function called');
-            wantsOpen=false;
-            context.openOnly=wantsOpen;
             return resolve(context);
         });
     },
@@ -1462,6 +1396,40 @@ app.post('/webhook', (req, res) => {
                         let text = JSON.stringify(event.postback.payload);
                         console.log(text);
 
+                        // For all other text messages
+                        // Let's forward the message to the Wit.ai Bot Engine
+                        // This will run all actions until our bot has nothing left to do
+                        wit.runActions(
+                                sessionId, // the user's current session
+                                text, // the user's message
+                                sessions[sessionId].context, // the user's current session state
+                                MAX_STEPS
+                        )
+                        .then((context) => {
+                            // Our bot did everything it has to do.
+                            // Now it's waiting for further messages to proceed.
+                            console.log('Waiting for next user messages');
+
+                            // Based on the session state, you might want to reset the session.
+                            // This depends heavily on the business logic of your bot.
+                            // Example:
+
+                            if (context.done) {
+                                delete sessions[sessionId];
+                                delete context.resName;
+                                delete context.done;
+                                resetParams();
+                            } else {
+                                // Updating the user's current session state
+                                sessions[sessionId].context = context;
+                            }
+                            
+                        })
+                        .catch((err) => {
+                            console.error('Oops! Got an error from Wit: ', err.stack || err);
+                        }) 
+
+                        /* Old codes
                         // Check if payload is a new conversation and start new conversation thread
                         if (text=='"startConvo"') {
                             typing(sender)
@@ -1484,6 +1452,7 @@ app.post('/webhook', (req, res) => {
                                 console.error(err);
                             });
                         }
+                        */
                     } else {
                         console.log('received event', JSON.stringify(event));
                     }
