@@ -1253,8 +1253,9 @@ const actions = {
 
         if (!context) {
             context.noContext = true;
-        } else {
-            context.noContext = false;
+            delete context.recGiven;
+            delete context.noRec;
+            delete context.storyDone;
         }
         console.log(context);
         return context;
