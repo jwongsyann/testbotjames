@@ -1234,7 +1234,9 @@ const actions = {
         context.recGiven = recGiven;
         context.noRec = noRec;
         context.storyDone = storyDone;
-        context.location = location;
+        if (location) {
+            context.location = location;   
+        }
         console.log(context);
         return context;
     },
