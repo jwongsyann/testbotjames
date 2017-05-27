@@ -951,7 +951,7 @@ const actions = {
         console.log('giveRec function called');
         const recipientId = sessions[sessionId].fbid;
         if (context.lat && context.long) {
-            location = '';
+            delete location;
             return new Promise(function(resolve,reject){
                 typing(recipientId)
                 .then(function(data){
