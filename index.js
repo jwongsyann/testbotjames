@@ -950,8 +950,8 @@ const actions = {
     giveRec({sessionId,context, entities}) {
         console.log('giveRec function called');
         const recipientId = sessions[sessionId].fbid;
-        console.log('lat is:'+lat);
         if (context.lat && context.long) {
+            location = '';
             return new Promise(function(resolve,reject){
                 typing(recipientId)
                 .then(function(data){
