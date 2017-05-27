@@ -1328,6 +1328,10 @@ app.post('/webhook', (req, res) => {
                         // We retrieve the Facebook user ID of the sender
                         const sender = event.sender.id;
 
+                        // We retrieve the user's current session, or create one if it doesn't exist
+                        // This is needed for our bot to figure out the conversation history
+                        const sessionId = findOrCreateSession(sender);
+          
                         // Update user session
                         requestUserName(sender)
                         .then(function(data){
@@ -1338,9 +1342,6 @@ app.post('/webhook', (req, res) => {
                         const {text, attachments, quick_reply} = event.message;
 
                         if (attachments) {
-
-                            // Need to initialize user session id to update wit context
-                            const sessionId = findOrCreateSession(sender);
 
                             // We received an attachment
                             // First need to identify if attachment was a shared location
@@ -1405,10 +1406,6 @@ app.post('/webhook', (req, res) => {
 						else if (text && !quick_reply) {
                             // We received a text message
 
-                            // We retrieve the user's current session, or create one if it doesn't exist
-                            // This is needed for our bot to figure out the conversation history
-                            const sessionId = findOrCreateSession(sender);
-
                             // For all other text messages
                             // Let's forward the message to the Wit.ai Bot Engine
                             // This will run all actions until our bot has nothing left to do
@@ -1443,9 +1440,6 @@ app.post('/webhook', (req, res) => {
                             })                                      
                             
                         } else if (text && quick_reply) {
-                            // We retrieve the user's current session, or create one if it doesn't exist
-                            // This is needed for our bot to figure out the conversation history
-                            const sessionId = findOrCreateSession(sender);
 
                             // For all other text messages
                             // Let's forward the message to the Wit.ai Bot Engine
@@ -1481,12 +1475,7 @@ app.post('/webhook', (req, res) => {
                             })
                         }
                     } else if (event.postback) {
-                        // This is to handle postbacks from cards
-                        const sender = event.sender.id;
-
-                        // Need to initialize user session id to update wit context
-                        const sessionId = findOrCreateSession(sender);
-
+                    
                         // Store text from payload
                         let text = JSON.stringify(event.postback.payload);
                         console.log(text);
