@@ -1233,9 +1233,19 @@ const actions = {
 
     checkContext({sessionId,context, entities}) {
         console.log('checkContext function called');
-        context.recGiven = recGiven;
-        context.noRec = noRec;
-        context.storyDone = storyDone;
+        if (recGiven) {
+            context.recGiven = recGiven;
+        }
+        if (noRec) {
+            context.noRec = noRec;
+        }
+
+        /*
+        if (storyDone) {
+            context.storyDone = storyDone;
+        }
+        */
+
         if (location) {
             context.location = location;   
         }
@@ -1244,7 +1254,6 @@ const actions = {
             context.noContext = true;
             delete context.recGiven;
             delete context.noRec;
-            delete context.storyDone;
         }
         console.log(context);
         return context;
@@ -1252,7 +1261,7 @@ const actions = {
 
     endStory({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
-            console.log('endConvo function called');
+            console.log('endStory function called');
             context.storyDone = true;
             storyDone = true;
             return resolve(context);
