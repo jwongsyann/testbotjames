@@ -862,7 +862,6 @@ const actions = {
 
     checkLocation({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
             console.log('checkLocation function called');
             console.log(lat+long);
             if (lat & long) {
@@ -899,7 +898,6 @@ const actions = {
 
     saveLocation({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
             console.log('saveLocation function called');
             location = firstEntityValue(entities,'location');
             if (location) {
@@ -912,7 +910,6 @@ const actions = {
 
     runGeocoder({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
             console.log('runGeocoder function called');
             location = '';
             if (context.location) {
@@ -943,7 +940,6 @@ const actions = {
     
     deleteLocation({sessionId,context,entities}) {
         return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
             console.log('deleteLocation function called');
             location = '';
             delete context.location;
@@ -1060,7 +1056,6 @@ const actions = {
 
     checkRadius({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
             console.log('checkRadius function called');
             context.radius = radius;
             return resolve(context);
@@ -1110,7 +1105,6 @@ const actions = {
 
     nextRec({sessionId,context, entities}) {
         console.log('nextRec function called');
-        const recipientId = sessions[sessionId].fbid;
 
         if (responseCounter >= jsonName.length) {
             // NEED TO HANDLE THIS PART VIA WIT
@@ -1191,7 +1185,6 @@ const actions = {
 
     changeExpensivePref({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
             console.log('changeExpensivePref function called');
             wantsLowPrice=true;
             if (priceCeiling==1) {
@@ -1210,7 +1203,6 @@ const actions = {
 
     resetExpensivePref({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
             console.log('resetExpensivePref function called');
             wantsLowPrice=false;
             priceCeiling = 4;
@@ -1221,7 +1213,6 @@ const actions = {
 
     changeRatingPref({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
             console.log('changeRatingPref function called');
             wantsHighRating=true;
             sortBy = updateSortBy(true);
@@ -1231,7 +1222,6 @@ const actions = {
     },
 
     saveFood({sessionId,context, entities}) {
-        const recipientId = sessions[sessionId].fbid;
         console.log('checkContext function called');
         food = firstEntityValue(entities,'food');
         if (food) {
@@ -1242,7 +1232,6 @@ const actions = {
     },
 
     checkContext({sessionId,context, entities}) {
-        const recipientId = sessions[sessionId].fbid;
         console.log('checkContext function called');
         context.recGiven = recGiven;
         context.noRec = noRec;
@@ -1263,7 +1252,6 @@ const actions = {
 
     endStory({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
             console.log('endConvo function called');
             context.storyDone = true;
             storyDone = true;
@@ -1273,7 +1261,6 @@ const actions = {
 
     endConvo({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
-            const recipientId = sessions[sessionId].fbid;
             console.log('endConvo function called');
             context.convoDone = true;
             return resolve(context);
@@ -1406,7 +1393,6 @@ app.post('/webhook', (req, res) => {
                             // We retrieve the user's current session, or create one if it doesn't exist
                             // This is needed for our bot to figure out the conversation history
                             const sessionId = findOrCreateSession(sender);
-                            console.log(sessions[sessionId].context);
 
                             // For all other text messages
                             // Let's forward the message to the Wit.ai Bot Engine
@@ -1445,7 +1431,6 @@ app.post('/webhook', (req, res) => {
                             // We retrieve the user's current session, or create one if it doesn't exist
                             // This is needed for our bot to figure out the conversation history
                             const sessionId = findOrCreateSession(sender);
-                            console.log(sessions[sessionId].context);
 
                             // For all other text messages
                             // Let's forward the message to the Wit.ai Bot Engine
@@ -1484,6 +1469,9 @@ app.post('/webhook', (req, res) => {
                         // This is to handle postbacks from cards
                         const sender = event.sender.id;
 
+                        // Need to initialize user session id to update wit context
+                        const sessionId = findOrCreateSession(sender);
+
                         // Store text from payload
                         let text = JSON.stringify(event.postback.payload);
                         console.log(text);
@@ -1511,11 +1499,6 @@ app.post('/webhook', (req, res) => {
                         // Only handle for certain texts otherwise wit will be confused with both text and postbacks!
                         // For example, don't want to handle quick replies which also has a postback payload!
                         if (text && text!="RESET_ALL") {
-                            // We retrieve the user's current session, or create one if it doesn't exist
-                            // This is needed for our bot to figure out the conversation history
-                            const sessionId = findOrCreateSession(sender);
-                            console.log(sessions[sessionId].context);
-
                             // For all other text messages
                             // Let's forward the message to the Wit.ai Bot Engine
                             // This will run all actions until our bot has nothing left to do
