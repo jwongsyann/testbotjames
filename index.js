@@ -1494,13 +1494,22 @@ app.post('/webhook', (req, res) => {
                             case '"WHO_ARE_YOU"':
                                 text = "who are you";
                                 break;
+                            case '"CHANGE_LOCATION_PAYLOAD"':
+                                text = "change my location";
+                                break;
+                            case '"CHANGE_FOOD_PAYLOAD"':
+                                text = "I want to eat";
+                                break;
+                            case '"RESET_ALL"':
+                                text = "RESET_ALL";
+                                break;
                             default:
                                 text = ""
                         }
 
                         // Only handle for certain texts otherwise wit will be confused with both text and postbacks!
                         // For example, don't want to handle quick replies which also has a postback payload!
-                        if (text) {
+                        if (text && text!="RESET_ALL") {
                             // We retrieve the user's current session, or create one if it doesn't exist
                             // This is needed for our bot to figure out the conversation history
                             const sessionId = findOrCreateSession(sender);
@@ -1538,6 +1547,8 @@ app.post('/webhook', (req, res) => {
                             .catch((err) => {
                                 console.error('Oops! Got an error from Wit: ', err.stack || err);
                             })                             
+                        } else if (text=="RESET_ALL") {
+                            resetParams();
                         }
 
                         /* Old codes
