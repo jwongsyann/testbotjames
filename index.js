@@ -103,6 +103,7 @@ var jsonIsOpenNow = '';
 // Intialize variable store for context
 var recGiven = false;
 var noRec = false;
+var storyDone = false;
 
 // Save some preference parameters
 var wantsOpen = true;
@@ -1228,6 +1229,7 @@ const actions = {
         console.log('checkContext function called');
         context.recGiven = recGiven;
         context.noRec = noRec;
+        context.storyDone = storyDone;
         console.log(context);
         return context;
     },
@@ -1237,6 +1239,7 @@ const actions = {
             const recipientId = sessions[sessionId].fbid;
             console.log('endConvo function called');
             context.storyDone = true;
+            storyDone = true;
             return resolve(context);
         });
     },
