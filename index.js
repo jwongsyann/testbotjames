@@ -98,8 +98,11 @@ var jsonId = '';
 var jsonPrice = '';
 var jsonPriceSym = '';
 var jsonIsOpenNow = '';
+
+
+// Intialize variable store for context
 var recGiven = false;
-var recError = false;
+var noRec = false;
 
 // Save some preference parameters
 var wantsOpen = true;
@@ -131,7 +134,7 @@ const resetParams = () => {
     offset = 0;
     newUser = false;
     recGiven = false;
-    recError = false;
+    noRec = false;
 }
 
 // ----------------------------------------------------------------------------
@@ -952,21 +955,20 @@ const actions = {
                 })
                 .then(function(data){
                     if (JSON.parse(data)['businesses'].length!=0) {
+                        recGiven = true;
+                        noRec = false;
                         context.recGiven = true;
                         delete context.noRec;
                         delete context.recError;
                         return saveYelpSearchOutput(data);   
                     } else if (JSON.parse(data)['businesses'].length==0) {
+                        noRec = true;
+                        recGiven = false;
                         context.noRec = true;
                         delete context.recGiven;
                         delete context.recError;
                         return false;
-                    } else {
-                        context.recError = true;
-                        delete context.recGiven;
-                        delete context.noRec;
-                        return false
-                    }
+                    } 
                 })
                 .then(function(data){
                     if (data) {
@@ -989,6 +991,8 @@ const actions = {
                         if (responseCounter >= jsonName.length) {
                             responseCounter = 0;
                             context.noRec=true;
+                            noRec = true;
+                            recGiven = false;
                             delete context.recGiven;
                             delete context.recError;
                             return false;
@@ -1222,15 +1226,26 @@ const actions = {
     checkContext({sessionId,context, entities}) {
         const recipientId = sessions[sessionId].fbid;
         console.log('checkContext function called');
+        context.recGiven = recGiven;
+        context.noRec = noRec;
         console.log(context);
         return context;
+    },
+
+    endStory({sessionId,context, entities}) {
+        return new Promise(function(resolve, reject) {
+            const recipientId = sessions[sessionId].fbid;
+            console.log('endConvo function called');
+            context.storyDone = true;
+            return resolve(context);
+        });
     },
 
     endConvo({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('endConvo function called');
-            context.done = true;
+            context.convoDone = true;
             return resolve(context);
         });
     }
@@ -1318,10 +1333,10 @@ app.post('/webhook', (req, res) => {
                                     // This depends heavily on the business logic of your bot.
                                     // Example:
 
-                                    if (context.done) {
+                                    if (context.storyDone) {
                                         delete sessions[sessionId];
-                                        delete context.resName;
-                                        delete context.done;
+                                    } else if (context.convoDone) {
+                                        delete sessions[sessionId];
                                         resetParams();
                                     } else {
                                         // Updating the user's current session state
@@ -1381,10 +1396,10 @@ app.post('/webhook', (req, res) => {
                                 // This depends heavily on the business logic of your bot.
                                 // Example:
 
-                                if (context.done) {
+                                if (context.storyDone) {
                                     delete sessions[sessionId];
-                                    delete context.resName;
-                                    delete context.done;
+                                } else if (context.convoDone) {
+                                    delete sessions[sessionId];
                                     resetParams();
                                 } else {
                                     // Updating the user's current session state
@@ -1420,10 +1435,10 @@ app.post('/webhook', (req, res) => {
                                 // This depends heavily on the business logic of your bot.
                                 // Example:
 
-                                if (context.done) {
+                                if (context.storyDone) {
                                     delete sessions[sessionId];
-                                    delete context.resName;
-                                    delete context.done;
+                                } else if (context.convoDone) {
+                                    delete sessions[sessionId];
                                     resetParams();
                                 } else {
                                     // Updating the user's current session state
@@ -1469,10 +1484,10 @@ app.post('/webhook', (req, res) => {
                                 // This depends heavily on the business logic of your bot.
                                 // Example:
 
-                                if (context.done) {
+                                if (context.storyDone) {
                                     delete sessions[sessionId];
-                                    delete context.resName;
-                                    delete context.done;
+                                } else if (context.convoDone) {
+                                    delete sessions[sessionId];
                                     resetParams();
                                 } else {
                                     // Updating the user's current session state
