@@ -1219,6 +1219,13 @@ const actions = {
         });
     },
 
+    checkContext({sessionId,context, entities}) {
+        const recipientId = sessions[sessionId].fbid;
+        console.log('checkContext function called');
+        console.log(context);
+        return context;
+    },
+
     endConvo({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
