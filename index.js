@@ -1395,6 +1395,10 @@ app.post('/webhook', (req, res) => {
                         // Store text from payload
                         let text = JSON.stringify(event.postback.payload);
                         console.log(text);
+                        // We retrieve the user's current session, or create one if it doesn't exist
+                        // This is needed for our bot to figure out the conversation history
+                        const sessionId = findOrCreateSession(sender);
+                        console.log(sessions[sessionId].context);
 
                         // For all other text messages
                         // Let's forward the message to the Wit.ai Bot Engine
@@ -1422,7 +1426,7 @@ app.post('/webhook', (req, res) => {
                             } else {
                                 // Updating the user's current session state
                                 sessions[sessionId].context = context;
-                            }
+                            }h
                             
                         })
                         .catch((err) => {
