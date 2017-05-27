@@ -1292,14 +1292,13 @@ app.post('/webhook', (req, res) => {
                             // First need to identify if attachment was a shared location
                             if (attachments[0].type=="location") {
 
-                                /*
+                                
                                 lat = attachments[0].payload.coordinates.lat;
                                 long = attachments[0].payload.coordinates.long;
                                 console.log('received coords:'+"lat:"+lat+"&long:"+long);
-                                const payloadText = "specialactivationforlocation"
                                 wit.runActions(
                                     sessionId, // the user's current session
-                                    payloadText, // the user's message
+                                    "I'm hungry", // the user's message
                                     sessions[sessionId].context, // the user's current session state
                                     MAX_STEPS
                                 )
@@ -1326,15 +1325,15 @@ app.post('/webhook', (req, res) => {
                                 .catch((err) => {
                                     console.error('Oops! Got an error from Wit: ', err.stack || err);
                                 })
-                                */
                                 
+                                /*
                                 // Save lat and long
                                 lat = attachments[0].payload.coordinates.lat;
                                 long = attachments[0].payload.coordinates.long;
                                 console.log('received coords:'+"lat:"+lat+"&long:"+long);
                                 
                                 fbGoMessage(sender,"Awesomeness coming right up!");
-                                
+                                */
 
                                 /*                                
                                 // Run lat and long through to yelp api
