@@ -76,7 +76,6 @@ if (!GOOGLEMAP_KEY) { throw new Error('missing GOOGLEMAP_KEY') }
 // Save latitude and longitude to global for reuse for yelp api call
 var lat = '';
 var long = '';
-var location = '';
 
 // Intialize variables that we will save to global
 var responseCounter = 0; 
@@ -104,6 +103,7 @@ var jsonIsOpenNow = '';
 var recGiven = false;
 var noRec = false;
 var storyDone = false;
+var location = '';
 
 // Save some preference parameters
 var wantsOpen = true;
@@ -136,6 +136,8 @@ const resetParams = () => {
     newUser = false;
     recGiven = false;
     noRec = false;
+    storyDone = false;
+    location = '';
 }
 
 // ----------------------------------------------------------------------------
@@ -910,6 +912,7 @@ const actions = {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('runGeocoder function called');
+            location = '';
             if (context.location) {
                     // Geocode an address
                     return googleMapsClient.geocode({
@@ -1230,6 +1233,7 @@ const actions = {
         context.recGiven = recGiven;
         context.noRec = noRec;
         context.storyDone = storyDone;
+        context.location = location;
         console.log(context);
         return context;
     },
