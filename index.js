@@ -508,7 +508,7 @@ const saveYelpSearchOutput = (data) => {
             jsonRating[i] = jsonBiz[i].rating;
 			jsonAddress[i] = jsonBiz[i].location.address1;
 			jsonAddress2[i] = jsonBiz[i].location.address2;
-			//jsonDist[i]= [jsonBiz[i].distance];
+			jsonDist[i]= [jsonBiz[i].distance];
             jsonMapLat[i] = jsonBiz[i].coordinates.latitude;
             jsonMapLong[i] = jsonBiz[i].coordinates.longitude;
             jsonId[i] = jsonBiz[i].id;
