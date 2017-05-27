@@ -1397,7 +1397,8 @@ app.post('/webhook', (req, res) => {
                         console.log(text);
 
                         // Only handle for certain texts otherwise wit will be confused with both text and postbacks!
-                        if (text=="startConvo") {
+                        // For example, don't want to handle quick replies which also has a postback payload!
+                        if (text=='"startConvo"') {
                             // We retrieve the user's current session, or create one if it doesn't exist
                             // This is needed for our bot to figure out the conversation history
                             const sessionId = findOrCreateSession(sender);
