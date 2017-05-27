@@ -114,6 +114,7 @@ var priceCeiling = 4;
 var sortBy = null;
 var radius = 1000;
 var offset = 0;
+var food = '';
 
 // Create variable to indicate newUsers for mongodb storage
 var newUser = false;
@@ -138,6 +139,7 @@ const resetParams = () => {
     noRec = false;
     storyDone = false;
     location = '';
+    food = '';
 }
 
 // ----------------------------------------------------------------------------
@@ -956,7 +958,7 @@ const actions = {
             return new Promise(function(resolve,reject){
                 typing(recipientId)
                 .then(function(data){
-                    return yelp.search({term: 'food', latitude: context.lat, longitude: context.long, open_now: wantsOpen, radius: radius, price: priceRange, limit: 50})
+                    return yelp.search({term: food+'food', latitude: context.lat, longitude: context.long, open_now: wantsOpen, radius: radius, price: priceRange, limit: 50})
                 })
                 .then(function(data){
                     if (JSON.parse(data)['businesses'].length!=0) {
@@ -1226,6 +1228,17 @@ const actions = {
             context.wantsHighRating=wantsHighRating;
             return resolve(context);
         });
+    },
+
+    saveFood({sessionId,context, entities}) {
+        const recipientId = sessions[sessionId].fbid;
+        console.log('checkContext function called');
+        food = firstEntityValue(entities,'food');
+        if (food) {
+            context.food = food;   
+        }
+        console.log(context);
+        return context;
     },
 
     checkContext({sessionId,context, entities}) {
