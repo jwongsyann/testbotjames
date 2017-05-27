@@ -91,6 +91,7 @@ var jsonNumber = '';
 var jsonRating = '';
 var jsonAddress = ''; 
 var jsonAddress2 = ''; 
+var jsonDist = ''; 
 var jsonMapLat = '';
 var jsonMapLong = '';
 var jsonId = '';
@@ -101,7 +102,7 @@ var recGiven = false;
 var recError = false;
 
 // Save some preference parameters
-var wantsOpen = false;
+var wantsOpen = true;
 var wantsHighRating = false;
 var wantsLowPrice = false;
 var ratingFloor = 3;
@@ -120,7 +121,7 @@ const resetParams = () => {
     location = '';
     responseCounter = 0;
     exceedResNo = false;
-    wantsOpen = false;
+    wantsOpen = true;
     wantsHighRating = false;
     wantsLowPrice = false;
     ratingFloor = 3;
@@ -203,14 +204,14 @@ const fbGoMessage = (id, message) => {
             [
             {
                 "content_type":"text",
-                "title":"Yes",
-                "payload":"go"
-            },
-            {
-                "content_type":"text",
-                "title":"No",
+                "title":"Cool..😑",
                 "payload":"go"
             }
+            // {
+//                 "content_type":"text",
+//                 "title":"No",
+//                 "payload":"go"
+//             }
             ]
         }
     });
@@ -261,7 +262,7 @@ const fbAskForLocation = (id, message) => {
 }
 
 // Generic template for one input from Yelp Api
-const fbYelpTemplate = (id, name, image_url, url, category, phone_number, rating, map_lat, map_long, price, is_open_now) => {
+const fbYelpTemplate = (id, name, image_url, url, category, phone_number, rating, distance, map_lat, map_long, price, is_open_now) => {
     const body = JSON.stringify({
         recipient: { id },
         message: {
@@ -275,7 +276,7 @@ const fbYelpTemplate = (id, name, image_url, url, category, phone_number, rating
 					    {
 							title: name ,
 							image_url: image_url,
-							subtitle: category+"|"+ "🏃dist:" + "\n "+ "\nRating:" + rating +"👍" + "\nPrice range:"+price,
+							subtitle: category+" | "+ "👣distance: "+ (Math.round(distance/50)*50)+"m" + "\n "+ "\nRating:" + rating +"👍🏻" + "\nPrice range:"+price,
     					    buttons: 
     						[
     	                        {
@@ -290,9 +291,10 @@ const fbYelpTemplate = (id, name, image_url, url, category, phone_number, rating
            							webview_height_ratio:"full"
                                 },
                                 {
-                                    type: "postback",
-                                    title: "Opening hours🚪",
-                                    payload: "phone_number"
+                                    type: "web_url",
+									url:"https:\/\/www.instagram.com",
+                                    title: "#Foodporn 😵",
+									webview_height_ratio:"full"
                                 }
     					    ]
                         }
@@ -321,17 +323,17 @@ const fbNextChoice = (id) => {
     const body = JSON.stringify({
         recipient: {id},
         message: {
-            text:"Can or not?",
+            text:"Love my recommendation?",
             quick_replies: 
             [
             {
                 "content_type":"text",
-                "title":"Show me sth else.",
+                "title":"Nay👎🏼",
                 "payload":"nextChoice"
             },
             {
                 "content_type":"text",
-                "title":"can",
+                "title":"Yay👍🏼",
                 "payload":"endConv" 
             }
             ]
@@ -380,7 +382,7 @@ const fbNextChoicePref = (id, pref) => {
         var quick_replies = [
         {
             "content_type":"text",
-            "title":"Show me sth else.",
+            "title":"Nay👎🏼",
             "payload":"nextChoice"
         },
         {
@@ -390,7 +392,7 @@ const fbNextChoicePref = (id, pref) => {
         },
         {
             "content_type":"text",
-            "title":"Can",
+            "title":"Yay👍🏼",
             "payload":"endConv" 
         }
         ];
@@ -398,17 +400,17 @@ const fbNextChoicePref = (id, pref) => {
         var quick_replies = [
         {
             "content_type":"text",
-            "title":"Show me sth else.",
+            "title":"Nay👎🏼",
             "payload":"nextChoice"
         },
         {
             "content_type":"text",
-            "title":"so expensive!",
+            "title":"So expensive!",
             "payload":"endConv" 
         },
         {
             "content_type":"text",
-            "title":"Can",
+            "title":"Cheap & good!",
             "payload":"endConv" 
         }
         ];
@@ -416,7 +418,7 @@ const fbNextChoicePref = (id, pref) => {
         var quick_replies = [
         {
             "content_type":"text",
-            "title":"Show me sth else.",
+            "title":"Nay👎🏼",
             "payload":"nextChoice"
         },
         {
@@ -426,7 +428,7 @@ const fbNextChoicePref = (id, pref) => {
         },
         {
             "content_type":"text",
-            "title":"Can",
+            "title":"Yay👍🏼",
             "payload":"endConv" 
         }
         ];
@@ -434,7 +436,7 @@ const fbNextChoicePref = (id, pref) => {
     const body = JSON.stringify({
         recipient: {id},
         message: {
-            text:"Can or not?",
+            text:"Love my recommendation?",
             quick_replies: quick_replies
         }
     });
@@ -524,6 +526,7 @@ const saveYelpSearchOutput = (data) => {
     jsonRating = [jsonBiz[0].rating];
 	jsonAddress=[jsonBiz[0].location.address1];
 	jsonAddress2=[jsonBiz[0].location.address2];
+	jsonDist=[jsonBiz[0].distance];
     jsonMapLat = [jsonBiz[0].coordinates.latitude];
     jsonMapLong = [jsonBiz[0].coordinates.longitude];
     jsonId = [jsonBiz[0].id];
@@ -550,6 +553,7 @@ const saveYelpSearchOutput = (data) => {
                 }
                 j++;
             } while (j<jsonBiz[i].categories.length);
+			
             jsonImage[i] = jsonBiz[i].image_url;
             if (jsonImage[i]) {
                 jsonImage[i] = jsonImage[i].replace("ms.jpg","o.jpg");
@@ -558,6 +562,7 @@ const saveYelpSearchOutput = (data) => {
             jsonRating[i] = jsonBiz[i].rating;
 			jsonAddress[i] = jsonBiz[i].location.address1;
 			jsonAddress2[i] = jsonBiz[i].location.address2;
+			//jsonDist[i]= [jsonBiz[i].distance];
             jsonMapLat[i] = jsonBiz[i].coordinates.latitude;
             jsonMapLong[i] = jsonBiz[i].coordinates.longitude;
             jsonId[i] = jsonBiz[i].id;
@@ -590,6 +595,7 @@ const saveYelpBusinessOutput = (data) => {
 
     return resObj;
 };
+
 
 const updatePriceRange = (data) => {
     var res = "";
@@ -661,6 +667,7 @@ const shuffleYelp = (array) => {
         var temp9 = jsonId[i];
 		var temp10 = jsonAddress[i];
 		var temp11 = jsonAddress2[i];
+		var temp12 = jsonDist[i];
 
         jsonName[i] = jsonName[j];
         jsonName[j] = temp;
@@ -699,6 +706,11 @@ const shuffleYelp = (array) => {
 		
         jsonAddress2[i] = jsonAddress2[j];
         jsonAddress2[j] = temp11;
+		
+        jsonDist[i] = jsonDist[j];
+        jsonDist[j] = temp12;
+		
+		
     }
     return true;
 }
@@ -921,7 +933,7 @@ const actions = {
             
             typing(recipientId)
             .then(function(data){
-                fbAskForLocation(recipientId,"Use the facebook location share button below or type your location in!");
+                fbAskForLocation(recipientId,"Send me your location or text me");
             })
             .catch(function(err) {
                 console.error(err);
@@ -1061,6 +1073,7 @@ const actions = {
                             jsonRating[responseCounter],
 						// jsonAddress2[responseCounter],
 					// 		jsonAddress[responseCounter],
+                            jsonDist[responseCounter],							
                             jsonMapLat[responseCounter],
                             jsonMapLong[responseCounter],
                             updatePriceSym(jsonPrice[responseCounter]),
@@ -1198,6 +1211,7 @@ const actions = {
                             jsonRating[responseCounter],
 						//	 jsonAddress2[responseCounter],
 					// 		jsonAddress[responseCounter],
+							jsonDist[responseCounter],	
                             jsonMapLat[responseCounter],
                             jsonMapLong[responseCounter],
                             updatePriceSym(jsonPrice[responseCounter]), 
@@ -1251,7 +1265,7 @@ const actions = {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
             console.log('changeExpensivePref function called');
-            wantsOpen=true;
+            wantsOpen=false;
             context.openOnly=wantsOpen;
             return resolve(context);
         });
@@ -1382,7 +1396,7 @@ app.post('/webhook', (req, res) => {
                                 long = attachments[0].payload.coordinates.long;
                                 console.log('received coords:'+"lat:"+lat+"&long:"+long);
                                 
-                                fbGoMessage(sender,"Ok, ready to start?");
+                                fbGoMessage(sender,"Awesomeness coming right up!");
                                 
 
                                 /*                                
@@ -1461,10 +1475,10 @@ app.post('/webhook', (req, res) => {
                                 return requestUserName(sender);
                             })
                             .then(function(data){
-                                return fbMessage(sender,"Hi "+ data + ". My name is James.");
+                                return fbMessage(sender,"Hi "+ data + ". My name is James, and I know alot of awesome food places😎.");
                             })
                             .then(function(data){
-                                return fbGoMessage(sender,"I can help you find places to eat near you.");
+                                return fbGoMessage(sender,"I can give you some suggestions, if you send me your location and tell me what you feel like eating k.");
                             })
                             .catch(function(err){
                                 console.error(err);
