@@ -1468,9 +1468,20 @@ app.post('/webhook', (req, res) => {
                         let text = JSON.stringify(event.postback.payload);
                         console.log(text);
 
+                        switch (text) {
+                            case '"startConvo"':
+                                text = "Hello";
+                                break;
+                            case "WHO_ARE_YOU":
+                                text = "who are you";
+                                break;
+                            default:
+                                text = ""
+                        }
+
                         // Only handle for certain texts otherwise wit will be confused with both text and postbacks!
                         // For example, don't want to handle quick replies which also has a postback payload!
-                        if (text=='"startConvo"') {
+                        if (text) {
                             // We retrieve the user's current session, or create one if it doesn't exist
                             // This is needed for our bot to figure out the conversation history
                             const sessionId = findOrCreateSession(sender);
@@ -1481,7 +1492,7 @@ app.post('/webhook', (req, res) => {
                             // This will run all actions until our bot has nothing left to do
                             wit.runActions(
                                     sessionId, // the user's current session
-                                    "Hello", // the user's message
+                                    text, // the user's message
                                     sessions[sessionId].context, // the user's current session state
                                     MAX_STEPS
                             )
@@ -1509,7 +1520,6 @@ app.post('/webhook', (req, res) => {
                                 console.error('Oops! Got an error from Wit: ', err.stack || err);
                             })                             
                         }
-
 
                         /* Old codes
                         // Check if payload is a new conversation and start new conversation thread
