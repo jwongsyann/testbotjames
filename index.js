@@ -1254,6 +1254,7 @@ const actions = {
             context.noContext = true;
             delete context.recGiven;
             delete context.noRec;
+            delete context.location;
         }
         console.log(context);
         return context;
