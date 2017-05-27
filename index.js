@@ -1105,6 +1105,7 @@ const actions = {
             
             context.allRecGiven=true;
             delete context.recGiven;
+            delete context.noRec;
             /*
             fbRestartRecommend(recipientId);
             */
@@ -1165,6 +1166,7 @@ const actions = {
                 .then(function(data){
                     context.recGiven=true;
                     delete context.allRecGiven;
+                    delete context.noRec;
                     return resolve(context);
                 })
                 .catch(err => {
