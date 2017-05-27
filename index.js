@@ -930,6 +930,8 @@ const actions = {
                             context.err = true;
                             delete context.lat;
                             delete context.long;
+                            delete context.location;
+                            delete context.missingLocation;
                             return resolve(context);
                         }
                     });
@@ -951,7 +953,6 @@ const actions = {
         console.log('giveRec function called');
         const recipientId = sessions[sessionId].fbid;
         if (context.lat && context.long) {
-            delete location;
             return new Promise(function(resolve,reject){
                 typing(recipientId)
                 .then(function(data){
