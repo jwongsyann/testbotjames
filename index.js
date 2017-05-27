@@ -1426,7 +1426,7 @@ app.post('/webhook', (req, res) => {
                             } else {
                                 // Updating the user's current session state
                                 sessions[sessionId].context = context;
-                            }h
+                            }
                             
                         })
                         .catch((err) => {
