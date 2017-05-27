@@ -1250,6 +1250,12 @@ const actions = {
         if (location) {
             context.location = location;   
         }
+
+        if (!context) {
+            context.noContext = true;
+        } else {
+            context.noContext = false;
+        }
         console.log(context);
         return context;
     },
