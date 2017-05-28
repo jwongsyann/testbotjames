@@ -112,7 +112,7 @@ var wantsLowPrice = false;
 var ratingFloor = 3;
 var priceCeiling = 4;
 var sortBy = null;
-var radius = 1000;
+var radius = 3000;
 var offset = 0;
 var food = '';
 
@@ -133,7 +133,7 @@ const resetParams = () => {
     priceCeiling = 4;
     priceRange=updatePriceRange(priceCeiling);
     sortBy = null;
-    radius = 1000;
+    radius = 3000;
     offset = 0;
     newUser = false;
     recGiven = false;

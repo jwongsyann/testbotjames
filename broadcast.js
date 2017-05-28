@@ -1,7 +1,7 @@
 // This script is to mass broadcast to all users of James!
 
 // TYPE MESSAGE HERE
-const msg = "Hi! :)"
+const msg = "Heyy!! I'mm backk! Smarter and hungrier too!"
 
 
 // ----------------------------------------------------------------------------
@@ -9,6 +9,7 @@ const msg = "Hi! :)"
 // ----------------------------------------------------------------------------
 const fetch = require('node-fetch');
 const mongoose = require('mongoose');
+const moment = require('moment-timezone');
 
 // ----------------------------------------------------------------------------
 // Setup required parameters
@@ -30,6 +31,37 @@ const fbMessage = (id, text) => {
     const body = JSON.stringify({
         recipient: { id },
         message: { text },
+    });
+    const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
+    return fetch('https://graph.facebook.com/me/messages?' + qs, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body,
+    })
+    .then(rsp => rsp.json())
+    .then(json => {
+        if (json.error && json.error.message) {
+            throw new Error(json.error.message);
+        }
+        return json;
+    });
+};
+
+// General FB quick replies 
+const fbQuickReply = (id) => {
+    const body = JSON.stringify({
+        recipient: {id},
+        message: {
+            text:"Any plans for lunch?",
+            quick_replies: 
+            [
+            {
+                "content_type":"text",
+                "title":"I'm famished!",
+                "payload":"I_M_HUNGRY"
+            }
+            ]
+        }
     });
     const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
     return fetch('https://graph.facebook.com/me/messages?' + qs, {
@@ -90,32 +122,42 @@ process.on('SIGINT', function() {
 // ----------------------------------------------------------------------------
 // UDF Codes
 // ----------------------------------------------------------------------------
+// Get all users
+dat = [];
+
 // Function to get user ID
-const sendMsgAllUser = () => {
+const sendConvoToUser = (id) => {
     // Find the document
-    userSession.find({}, function(error, result) {
-        if (error) throw error;
-        if (result) {
-            return result;
-        }
-    })
+	fbMessage(id,msg)
     .then(function(data){
-    	for (var i =  0; i < (data.length-1); i++) {
-    		//fbMessage(data[i]['fbid'],msg);
-    	}
-    	
-    	// Check that its a monday.
-    	var d = new Date();
-    	console.log(new Date());
-    	d = d.getDay();
-    	console.log(data.length);
+		fbQuickReply(id);
     })
-    .then(function(data){
-    	mongoose.disconnect();
-    });
+    .catch(function(err){})
 }
 
 // ----------------------------------------------------------------------------
 // Main Body Codes
 // ----------------------------------------------------------------------------
-sendMsgAllUser();
+var d = new Date();
+d = moment(d).tz('Asia/Singapore').format('HHmm');
+
+if (d=='1130') {
+	userSession.find({}, function(error, result) {
+	    if (error) throw error;
+	    if (result) {
+	        return result;
+	    }
+	}).then(function(data){
+		for (var i = 0; i<2; i++) {
+			dat[i] = data[i]['fbid'];
+		}
+		return true;
+	}).then(function(data){
+		for (var i = 0; i<2; i++) {
+			sendConvoToUser(dat[i]);
+		}
+		return true;
+	}).then(function(data){
+		mongoose.disconnect();
+	}).catch(function(err){});
+}

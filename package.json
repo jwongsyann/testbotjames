@@ -15,6 +15,7 @@
     "express": "^4.14.1",
     "facebook-node-sdk": "^0.2.0",
     "geocoder": "^0.2.3",
+    "moment-timezone": "^0.5.13",
     "mongoose": "^4.9.2",
     "node-wit": "^4.2.0",
     "node-yelp-fusion": "^1.0.4",
