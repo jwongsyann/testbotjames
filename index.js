@@ -906,6 +906,9 @@ const actions = {
 
     giveRec({sessionId,context, entities}) {
         console.log('giveRec function called');
+        console.log(priceRange);
+        console.log(food);
+        console.log(recipientId);
         const recipientId = sessions[sessionId].fbid;
         if (context.lat && context.long) {
             return new Promise(function(resolve,reject){
@@ -1002,7 +1005,7 @@ const actions = {
                     context.recError = true;
                     noRec = false;
                     recGiven = false;
-                    return reject(context);
+                    return resolve(context);
                 });
             });
         } else {
