@@ -1323,14 +1323,16 @@ app.post('/webhook', (req, res) => {
         if (data.object === 'page') {
             data.entry.forEach(entry => {
                 entry.messaging.forEach(event => {
-                    if (event.message && !event.message.is_echo) {
-                        // Yay! We got a new message!
-                        // We retrieve the Facebook user ID of the sender
-                        const sender = event.sender.id;
 
-                        // We retrieve the user's current session, or create one if it doesn't exist
-                        // This is needed for our bot to figure out the conversation history
-                        const sessionId = findOrCreateSession(sender);
+                    // Yay! We got a new message!
+                    // We retrieve the Facebook user ID of the sender
+                    const sender = event.sender.id;
+
+                    // We retrieve the user's current session, or create one if it doesn't exist
+                    // This is needed for our bot to figure out the conversation history
+                    const sessionId = findOrCreateSession(sender);
+
+                    if (event.message && !event.message.is_echo) {
           
                         // Update user session
                         requestUserName(sender)
@@ -1475,10 +1477,6 @@ app.post('/webhook', (req, res) => {
                             })
                         }
                     } else if (event.postback) {
-                    
-                        // We retrieve the user's current session, or create one if it doesn't exist
-                        // This is needed for our bot to figure out the conversation history
-                        const sessionId = findOrCreateSession(sender);
                         
                         // Store text from payload
                         let text = JSON.stringify(event.postback.payload);
