@@ -9,7 +9,8 @@ const msg = "Heyy!! I'mm backk! Smarter and hungrier too!"
 // ----------------------------------------------------------------------------
 const fetch = require('node-fetch');
 const mongoose = require('mongoose');
-const moment = require('moment-timezone');
+const momentTz = require('moment-timezone');
+const moment = require('moment');
 
 // ----------------------------------------------------------------------------
 // Setup required parameters
@@ -138,11 +139,13 @@ const sendConvoToUser = (id) => {
 // ----------------------------------------------------------------------------
 // Main Body Codes
 // ----------------------------------------------------------------------------
-var d = new Date();
-d = moment(d).tz('Asia/Singapore').format('HH');
-d = parseInt(d);
+var d = momentTz(new Date()).tz('Asia/Singapore').format();
+var t = momentTz(new Date()).tz('Asia/Singapore').format("HH");
+t = parseInt(t);
+d = moment(d).day();
 
-if (d>11 & d<12) {
+// Only send on Mon 11am 
+if (d==1 && t==11) {
 	userSession.find({}, function(error, result) {
 	    if (error) throw error;
 	    if (result) {
@@ -162,4 +165,3 @@ if (d>11 & d<12) {
 		mongoose.disconnect();
 	}).catch(function(err){});
 }
-
