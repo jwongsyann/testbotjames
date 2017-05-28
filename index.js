@@ -1110,6 +1110,7 @@ const actions = {
 
     nextRec({sessionId,context, entities}) {
         console.log('nextRec function called');
+        const recipientId = sessions[sessionId].fbid;
 
         if (responseCounter >= jsonName.length) {
             // NEED TO HANDLE THIS PART VIA WIT
