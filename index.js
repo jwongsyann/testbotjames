@@ -820,7 +820,7 @@ const actions = {
     checkLocation({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             console.log('checkLocation function called');
-            console.log(lat+long);
+            console.log(sessions);
             if (lat & long) {
                 context.lat = lat;
                 context.long = long;
@@ -906,12 +906,11 @@ const actions = {
 
     giveRec({sessionId,context, entities}) {
         console.log('giveRec function called');
-        console.log(priceRange);
-        console.log(food);
-        console.log(recipientId);
         const recipientId = sessions[sessionId].fbid;
+        console.log(recipientId);
         if (context.lat && context.long) {
             return new Promise(function(resolve,reject){
+                console.log(recipientId);
                 typing(recipientId)
                 .then(function(data){
                     return yelp.search({term: food+'food', latitude: context.lat, longitude: context.long, open_now: wantsOpen, radius: radius, price: priceRange, limit: 50})
@@ -1314,22 +1313,20 @@ app.post('/webhook', (req, res) => {
                         // Yay! We got a new message!
                         // We retrieve the Facebook user ID of the sender
                         const sender = event.sender.id;
-
-                        // We retrieve the user's current session, or create one if it doesn't exist
-                        // This is needed for our bot to figure out the conversation history
-                        const sessionId = findOrCreateSession(sender);
-
-                        console.log(sessions[sessionId]);
-
+                        console.log(sessions);
                         // Update user session
                         requestUserName(sender)
                         .then(function(data){
                             addOrUpdateUser(sender,data);
                         });
+
                         // We retrieve the message content
                         const {text, attachments, quick_reply} = event.message;
 
                         if (attachments) {
+                            // We retrieve the user's current session, or create one if it doesn't exist
+                            // This is needed for our bot to figure out the conversation history
+                            const sessionId = findOrCreateSession(sender);
 
                             // We received an attachment
                             // First need to identify if attachment was a shared location
@@ -1371,6 +1368,11 @@ app.post('/webhook', (req, res) => {
                             }
 
                         } else if (text && !quick_reply) {
+                            // We retrieve the user's current session, or create one if it doesn't exist
+                            // This is needed for our bot to figure out the conversation history
+                            const sessionId = findOrCreateSession(sender);
+                            console.log(sessions);
+                            
                             // We received a text message
                             // For all other text messages
                             // Let's forward the message to the Wit.ai Bot Engine
@@ -1406,7 +1408,10 @@ app.post('/webhook', (req, res) => {
                             })                                      
                             
                         } else if (text && quick_reply) {
-
+                            // We retrieve the user's current session, or create one if it doesn't exist
+                            // This is needed for our bot to figure out the conversation history
+                            const sessionId = findOrCreateSession(sender);
+                            
                             // For all other text messages
                             // Let's forward the message to the Wit.ai Bot Engine
                             // This will run all actions until our bot has nothing left to do
@@ -1449,14 +1454,6 @@ app.post('/webhook', (req, res) => {
                         // We retrieve the user's current session, or create one if it doesn't exist
                         // This is needed for our bot to figure out the conversation history
                         const sessionId = findOrCreateSession(sender);
-
-                        console.log(sessions[sessionId]);
-
-                        // Update user session
-                        requestUserName(sender)
-                        .then(function(data){
-                            addOrUpdateUser(sender,data);
-                        });
                         
                         // Store text from payload
                         let text = JSON.stringify(event.postback.payload);
