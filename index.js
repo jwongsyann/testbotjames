@@ -1231,7 +1231,34 @@ const actions = {
         food = firstEntityValue(entities,'food');
         if (food) {
             context.food = food;   
+            delete context.missingFood;
+        } else {
+            context.missingFood = true;
+            delete context.food;
         }
+        console.log(context);
+        return context;
+    },
+
+    saveFoodLocation({sessionId,context, entities}) {
+        console.log('checkContext function called');
+        food = firstEntityValue(entities,'food');
+        location = firstEntityValue(entities,'location');
+        if (food) {
+            context.food = food;
+            delete context.missingFood; 
+        } else {
+            context.missingFood = true;
+            delete context.food;
+        }
+        if (location) {
+            context.location = location;
+            delete context.missingLocation;
+        } else {
+            context.missingLocation = true;
+            delete context.location;
+        }
+
         console.log(context);
         return context;
     },
@@ -1477,7 +1504,7 @@ app.post('/webhook', (req, res) => {
                             })
                         }
                     } else if (event.postback) {
-                        
+
                         // Store text from payload
                         let text = JSON.stringify(event.postback.payload);
                         console.log(text);
