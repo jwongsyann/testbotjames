@@ -131,6 +131,7 @@ const resetParams = () => {
     wantsLowPrice = false;
     ratingFloor = 3;
     priceCeiling = 4;
+    priceRange=updatePriceRange(priceCeiling);
     sortBy = null;
     radius = 1000;
     offset = 0;
