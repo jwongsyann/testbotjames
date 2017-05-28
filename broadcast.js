@@ -100,9 +100,14 @@ const sendMsgAllUser = () => {
         }
     })
     .then(function(data){
-    	for (var i =  0; i <2; i++) {
-    		fbMessage(data[i]['fbid'],msg);
+    	for (var i =  0; i < (data.length-1); i++) {
+    		//fbMessage(data[i]['fbid'],msg);
     	}
+    	
+    	// Check that its a monday.
+    	var d = new Date();
+    	console.log(new Date());
+    	d = d.getDay();
     	console.log(data.length);
     })
     .then(function(data){
