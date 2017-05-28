@@ -754,6 +754,11 @@ const actions = {
     send({sessionId}, response) {
         // Our bot has something to say!
         // Let's retrieve the Facebook user whose session belongs to
+
+        if (!sessions[sessionId].fbid) {
+            // Need to initialize user session id to update wit context
+            var sessionId = findOrCreateSession(sender);
+        }
         const recipientId = sessions[sessionId].fbid;
         
         if (recipientId) {
