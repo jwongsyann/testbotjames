@@ -1221,6 +1221,29 @@ const actions = {
         return context;
     },
 
+    saveFoodLocation({sessionId,context, entities}) {
+        console.log('checkContext function called');
+        food = firstEntityValue(entities,'food');
+        location = firstEntityValue(entities,'location');
+        if (food) {
+            context.food = food;
+            delete context.missingFood; 
+        } else {
+            context.missingFood = true;
+            delete context.food;
+        }
+        if (location) {
+            context.location = location;
+            delete context.missingLocation;
+        } else {
+            context.missingLocation = true;
+            delete context.location;
+        }
+ 
+        console.log(context);
+        return context;
+     },
+
     checkContext({sessionId,context, entities}) {
         console.log('checkContext function called');
         if (recGiven) {
@@ -1313,7 +1336,10 @@ app.post('/webhook', (req, res) => {
                         // Yay! We got a new message!
                         // We retrieve the Facebook user ID of the sender
                         const sender = event.sender.id;
-                        console.log(sessions);
+
+                        // Need to initialize user session id to update wit context
+                        const sessionId = findOrCreateSession(sender);
+                        
                         // Update user session
                         requestUserName(sender)
                         .then(function(data){
