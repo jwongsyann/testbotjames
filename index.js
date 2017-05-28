@@ -1002,7 +1002,7 @@ const actions = {
                     context.recError = true;
                     noRec = false;
                     recGiven = false;
-                    return resolve(context);
+                    return reject(context);
                 });
             });
         } else {
