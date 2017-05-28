@@ -139,9 +139,10 @@ const sendConvoToUser = (id) => {
 // Main Body Codes
 // ----------------------------------------------------------------------------
 var d = new Date();
-d = moment(d).tz('Asia/Singapore').format('HHmm');
+d = moment(d).tz('Asia/Singapore').format('HH');
+d = parseInt(d);
 
-if (d=='1130') {
+if (d>11 & d<12) {
 	userSession.find({}, function(error, result) {
 	    if (error) throw error;
 	    if (result) {
@@ -161,3 +162,4 @@ if (d=='1130') {
 		mongoose.disconnect();
 	}).catch(function(err){});
 }
+
