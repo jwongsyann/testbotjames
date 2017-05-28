@@ -1315,7 +1315,7 @@ app.post('/webhook', (req, res) => {
                     // This is needed for our bot to figure out the conversation history
                     const sessionId = findOrCreateSession(sender);
 
-                    console.log(session[sessionId]);
+                    console.log(sessions[sessionId]);
 
                     // Update user session
                     requestUserName(sender)
