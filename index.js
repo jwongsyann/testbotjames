@@ -1310,24 +1310,22 @@ app.post('/webhook', (req, res) => {
             data.entry.forEach(entry => {
                 entry.messaging.forEach(event => {
 
-                    // Yay! We got a new message!
-                    // We retrieve the Facebook user ID of the sender
-                    const sender = event.sender.id;
-
-                    // We retrieve the user's current session, or create one if it doesn't exist
-                    // This is needed for our bot to figure out the conversation history
-                    const sessionId = findOrCreateSession(sender);
-
-                    console.log(sessions[sessionId]);
-
-                    // Update user session
-                    requestUserName(sender)
-                    .then(function(data){
-                        addOrUpdateUser(sender,data);
-                    });
-
                     if (event.message && !event.message.is_echo) {
+                        // Yay! We got a new message!
+                        // We retrieve the Facebook user ID of the sender
+                        const sender = event.sender.id;
 
+                        // We retrieve the user's current session, or create one if it doesn't exist
+                        // This is needed for our bot to figure out the conversation history
+                        const sessionId = findOrCreateSession(sender);
+
+                        console.log(sessions[sessionId]);
+
+                        // Update user session
+                        requestUserName(sender)
+                        .then(function(data){
+                            addOrUpdateUser(sender,data);
+                        });
                         // We retrieve the message content
                         const {text, attachments, quick_reply} = event.message;
 
@@ -1444,6 +1442,22 @@ app.post('/webhook', (req, res) => {
                         }
                     } else if (event.postback) {
 
+                        // Yay! We got a new message!
+                        // We retrieve the Facebook user ID of the sender
+                        const sender = event.sender.id;
+
+                        // We retrieve the user's current session, or create one if it doesn't exist
+                        // This is needed for our bot to figure out the conversation history
+                        const sessionId = findOrCreateSession(sender);
+
+                        console.log(sessions[sessionId]);
+
+                        // Update user session
+                        requestUserName(sender)
+                        .then(function(data){
+                            addOrUpdateUser(sender,data);
+                        });
+                        
                         // Store text from payload
                         let text = JSON.stringify(event.postback.payload);
                         console.log(text);
