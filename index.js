@@ -202,44 +202,6 @@ const fbMessage = (id, text) => {
     });
 };
 
-// Standard function to send Let's go or I'm hungry quick replies
-const fbGoMessage = (id, message) => {
-    const body = JSON.stringify({
-        recipient: { id },
-        message: {
-
-            text:message,
-            quick_replies: 
-            [
-            {
-                "content_type":"text",
-                "title":"Cool..😑",
-                "payload":"go"
-            }
-            // {
-//                 "content_type":"text",
-//                 "title":"No",
-//                 "payload":"go"
-//             }
-            ]
-        }
-    });
-
-    const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
-    fetch('https://graph.facebook.com/me/messages?' + qs, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body,
-    })
-    .then(rsp => rsp.json())
-    .then(json => {
-        if (json.error && json.error.message) {
-            throw new Error(json.error.message);
-        }
-        return json;
-    });
-}
-
 // Quick reply to request for location
 const fbAskForLocation = (id, message) => {
     const body = JSON.stringify({
@@ -603,10 +565,6 @@ const updateSortBy = (data) => {
 
 var priceRange = updatePriceRange(priceCeiling);
 
-const updateOffset = () => {
-    offset += 1;
-}
-
 // Need to find a better shuffle algo
 const shuffleYelp = (array) => {
     for (var i = array.length - 1; i > 0; i--) {
@@ -664,7 +622,6 @@ const shuffleYelp = (array) => {
 		
         jsonDist[i] = jsonDist[j];
         jsonDist[j] = temp12;
-		
 		
     }
     return true;
@@ -754,7 +711,6 @@ const addOrUpdateUserResult = (fbid,resName,resCategory) => {
         }
     });
 }
-
 
 // ----------------------------------------------------------------------------
 // Wit.ai bot specific code
@@ -1025,8 +981,6 @@ const actions = {
                             jsonCat[responseCounter],
                             jsonNumber[responseCounter],
                             jsonRating[responseCounter],
-						// jsonAddress2[responseCounter],
-					// 		jsonAddress[responseCounter],
                             jsonDist[responseCounter],							
                             jsonMapLat[responseCounter],
                             jsonMapLong[responseCounter],
@@ -1361,13 +1315,15 @@ app.post('/webhook', (req, res) => {
                     // This is needed for our bot to figure out the conversation history
                     const sessionId = findOrCreateSession(sender);
 
+                    console.log(session[sessionId]);
+
+                    // Update user session
+                    requestUserName(sender)
+                    .then(function(data){
+                        addOrUpdateUser(sender,data);
+                    });
+
                     if (event.message && !event.message.is_echo) {
-          
-                        // Update user session
-                        requestUserName(sender)
-                        .then(function(data){
-                            addOrUpdateUser(sender,data);
-                        });
 
                         // We retrieve the message content
                         const {text, attachments, quick_reply} = event.message;
@@ -1378,7 +1334,6 @@ app.post('/webhook', (req, res) => {
                             // First need to identify if attachment was a shared location
                             if (attachments[0].type=="location") {
 
-                                
                                 lat = attachments[0].payload.coordinates.lat;
                                 long = attachments[0].payload.coordinates.long;
                                 console.log('received coords:'+"lat:"+lat+"&long:"+long);
@@ -1392,10 +1347,6 @@ app.post('/webhook', (req, res) => {
                                     // Our bot did everything it has to do.
                                     // Now it's waiting for further messages to proceed.
                                     console.log('Waiting for next user messages');
-
-                                    // Based on the session state, you might want to reset the session.
-                                    // This depends heavily on the business logic of your bot.
-                                    // Example:
 
                                     if (context.storyDone) {
                                         delete sessions[sessionId];
@@ -1411,32 +1362,15 @@ app.post('/webhook', (req, res) => {
                                 .catch((err) => {
                                     console.error('Oops! Got an error from Wit: ', err.stack || err);
                                 })
-                                
-                                /*
-                                // Save lat and long
-                                lat = attachments[0].payload.coordinates.lat;
-                                long = attachments[0].payload.coordinates.long;
-                                console.log('received coords:'+"lat:"+lat+"&long:"+long);
-                                
-                                fbGoMessage(sender,"Awesomeness coming right up!");
-                                */
 
-                                /*                                
-                                // Run lat and long through to yelp api
-                                const message = "How about this?"
-                                recommendChunk(sender, message,lat,long,null,wantsOpen,priceRange,null,sortBy,radius);
-                                sessions[sessionId].context.recommendGiven = true;
-                                */                      
                             } else {
                                 // Let's reply with an automatic message
                                 fbMessage(sender, "C'mon, I'm just a bot. I won't understand random attachments...")
                                 .catch(console.error);
                             }
 
-                        } 
-						else if (text && !quick_reply) {
+                        } else if (text && !quick_reply) {
                             // We received a text message
-
                             // For all other text messages
                             // Let's forward the message to the Wit.ai Bot Engine
                             // This will run all actions until our bot has nothing left to do
@@ -1570,30 +1504,6 @@ app.post('/webhook', (req, res) => {
                             resetParams();
                         }
 
-                        /* Old codes
-                        // Check if payload is a new conversation and start new conversation thread
-                        if (text=='"startConvo"') {
-                            typing(sender)
-                            .then(function(data){
-                                return requestUserName(sender);
-                            })
-                            .then(function(data){
-                                addOrUpdateUser(sender,data);
-                            })
-                            .then(function(data){
-                                return requestUserName(sender);
-                            })
-                            .then(function(data){
-                                return fbMessage(sender,"Hi "+ data + ". My name is James, and I know alot of awesome food places😎.");
-                            })
-                            .then(function(data){
-                                return fbGoMessage(sender,"I can give you some suggestions, if you send me your location and tell me what you feel like eating k.");
-                            })
-                            .catch(function(err){
-                                console.error(err);
-                            });
-                        }
-                        */
                     } else {
                         console.log('received event', JSON.stringify(event));
                     }
