@@ -104,6 +104,7 @@ var recGiven = false;
 var noRec = false;
 var storyDone = false;
 var location = '';
+var IMHUNGRY = false;
 
 // Save some preference parameters
 var wantsOpen = true;
@@ -141,6 +142,7 @@ const resetParams = () => {
     storyDone = false;
     location = '';
     food = '';
+    IMHUNGRY = false;
 }
 
 // ----------------------------------------------------------------------------
@@ -1267,12 +1269,16 @@ const actions = {
         if (location) {
             context.location = location;   
         }
+        if (IMHUNGRY) {
+            context.IMHUNGRY = true;
+        }
 
         if (!context) {
             context.noContext = true;
             delete context.recGiven;
             delete context.noRec;
             delete context.location;
+            delete context.IMHUNGRY;
         }
         console.log(context);
         return context;
@@ -1443,6 +1449,12 @@ app.post('/webhook', (req, res) => {
                             // This is needed for our bot to figure out the conversation history
                             const sessionId = findOrCreateSession(sender);
                             
+                            payload = quick_reply.payload;
+
+                            if (payload=='"I_M_HUNGRY') {
+                                IMHUNGRY = true;
+                            }
+
                             // For all other text messages
                             // Let's forward the message to the Wit.ai Bot Engine
                             // This will run all actions until our bot has nothing left to do

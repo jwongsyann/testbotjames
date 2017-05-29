@@ -152,12 +152,12 @@ if (d==1 && t==11) {
 	        return result;
 	    }
 	}).then(function(data){
-		for (var i = 0; i<2; i++) {
+		for (var i = 0; i<data.length; i++) {
 			dat[i] = data[i]['fbid'];
 		}
 		return true;
 	}).then(function(data){
-		for (var i = 0; i<2; i++) {
+		for (var i = 0; i<data.length; i++) {
 			sendConvoToUser(dat[i]);
 		}
 		return true;
