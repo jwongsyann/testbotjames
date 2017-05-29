@@ -1449,7 +1449,7 @@ app.post('/webhook', (req, res) => {
                             // This is needed for our bot to figure out the conversation history
                             const sessionId = findOrCreateSession(sender);
                             
-                            payload = quick_reply.payload;
+                            const payload = quick_reply.payload;
 
                             if (payload=='"I_M_HUNGRY') {
                                 IMHUNGRY = true;
