@@ -825,7 +825,6 @@ const actions = {
     checkLocation({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             console.log('checkLocation function called');
-            console.log(sessions);
             if (lat & long) {
                 context.lat = lat;
                 context.long = long;
@@ -912,10 +911,8 @@ const actions = {
     giveRec({sessionId,context, entities}) {
         console.log('giveRec function called');
         const recipientId = sessions[sessionId].fbid;
-        console.log(recipientId);
         if (context.lat && context.long) {
             return new Promise(function(resolve,reject){
-                console.log(recipientId);
                 typing(recipientId)
                 .then(function(data){
                     return yelp.search({term: food+'food', latitude: context.lat, longitude: context.long, open_now: wantsOpen, radius: radius, price: priceRange, limit: 50})
@@ -999,7 +996,6 @@ const actions = {
                     }
                 })
                 .then(function(data){
-                    console.log(context);
                     return resolve(context);
                 })
                 .catch(err => {
@@ -1199,7 +1195,6 @@ const actions = {
             context.missingFood = true;
             delete context.food;
         }
-        console.log(context);
         return context;
     },
 
@@ -1221,8 +1216,6 @@ const actions = {
             context.missingLocation = true;
             delete context.location;
         }
-
-        console.log(context);
         return context;
     },
 
@@ -1244,13 +1237,12 @@ const actions = {
             context.missingLocation = true;
             delete context.location;
         }
- 
-        console.log(context);
         return context;
      },
 
     checkContext({sessionId,context, entities}) {
         console.log('checkContext function called');
+        console.log(context);
         if (recGiven) {
             context.recGiven = recGiven;
         }
@@ -1268,13 +1260,13 @@ const actions = {
             context.location = location;   
         }
 
-        if (!context) {
+        if (Object.keys(context).length==0) {
+            console.log("this code runs");
             context.noContext = true;
             delete context.recGiven;
             delete context.noRec;
             delete context.location;
         }
-        console.log(context);
         return context;
     },
 
@@ -1365,7 +1357,6 @@ app.post('/webhook', (req, res) => {
 
                                 lat = attachments[0].payload.coordinates.lat;
                                 long = attachments[0].payload.coordinates.long;
-                                console.log('received coords:'+"lat:"+lat+"&long:"+long);
                                 wit.runActions(
                                     sessionId, // the user's current session
                                     "I'm hungry", // the user's message
@@ -1402,7 +1393,6 @@ app.post('/webhook', (req, res) => {
                             // We retrieve the user's current session, or create one if it doesn't exist
                             // This is needed for our bot to figure out the conversation history
                             const sessionId = findOrCreateSession(sender);
-                            console.log(sessions);
                             
                             // We received a text message
                             // For all other text messages
@@ -1488,7 +1478,6 @@ app.post('/webhook', (req, res) => {
                         
                         // Store text from payload
                         let text = JSON.stringify(event.postback.payload);
-                        console.log(text);
 
                         switch (text) {
                             case '"startConvo"':

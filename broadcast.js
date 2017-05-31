@@ -11,6 +11,7 @@ const fetch = require('node-fetch');
 const mongoose = require('mongoose');
 const momentTz = require('moment-timezone');
 const moment = require('moment');
+const async = require('async');
 
 // ----------------------------------------------------------------------------
 // Setup required parameters
@@ -133,6 +134,9 @@ const sendConvoToUser = (id) => {
     .then(function(data){
 		fbQuickReply(id);
     })
+    .then(function(data){
+        return true;
+    })
     .catch(function(err){})
 }
 
@@ -145,7 +149,7 @@ t = parseInt(t);
 d = moment(d).day();
 
 // Only send on Mon 11am 
-if (d==1 && t==11) {
+//if (d==1 && t==11) {
 	userSession.find({}, function(error, result) {
 	    if (error) throw error;
 	    if (result) {
@@ -157,11 +161,11 @@ if (d==1 && t==11) {
 		}
 		return true;
 	}).then(function(data){
-		for (var i = 0; i<data.length; i++) {
+		/*for (var i = 0; i<data.length; i++) {
 			sendConvoToUser(dat[i]);
-		}
-		return true;
+		}*/
+        sendConvoToUser(dat[23]);
 	}).then(function(data){
 		mongoose.disconnect();
 	}).catch(function(err){});
-}
+//}
