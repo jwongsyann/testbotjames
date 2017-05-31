@@ -1025,6 +1025,12 @@ const actions = {
         });
     },
 
+    removeRadius({sessionId,context, entities}) {
+        console.log('removeRadius function called');
+        radius = null;
+        return true;
+    },
+
     saveRadiusPref({sessionId,context, entities}) {
         return new Promise(function(resolve, reject) {
             const recipientId = sessions[sessionId].fbid;
