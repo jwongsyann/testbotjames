@@ -35,7 +35,7 @@ const PORT = process.env.PORT || 8445;
 
 // Wit.ai parameters
 const WIT_TOKEN = process.env.WIT_TOKEN;
-const MAX_STEPS = 25;
+const MAX_STEPS = 3;
 
 // Messenger API parameters
 const FB_PAGE_TOKEN = process.env.FB_PAGE_TOKEN;
