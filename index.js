@@ -1027,7 +1027,7 @@ const actions = {
 
     removeRadius({sessionId,context, entities}) {
         console.log('removeRadius function called');
-        radius = null;
+        radius = '';
         return true;
     },
 
