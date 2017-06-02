@@ -1026,9 +1026,12 @@ const actions = {
     },
 
     removeRadius({sessionId,context, entities}) {
-        console.log('removeRadius function called');
-        radius = '';
-        return true;
+        return new Promise(function(resolve,reject) {
+            console.log('removeRadius function called');
+            radius = '';
+            context.radius = radius;    
+            return resolve(context);
+        })
     },
 
     saveRadiusPref({sessionId,context, entities}) {
