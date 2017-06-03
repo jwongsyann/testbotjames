@@ -35,7 +35,7 @@ const PORT = process.env.PORT || 8445;
 
 // Wit.ai parameters
 const WIT_TOKEN = process.env.WIT_TOKEN;
-const MAX_STEPS = 3;
+const MAX_STEPS = 5;
 
 // Messenger API parameters
 const FB_PAGE_TOKEN = process.env.FB_PAGE_TOKEN;
@@ -831,6 +831,7 @@ const actions = {
                 delete context.location;
                 delete context.missingLocation;
             } else {
+                console.log("something wrong");
                 context.missingLocation = true;
                 delete context.lat;
                 delete context.long;
@@ -864,6 +865,9 @@ const actions = {
             if (location) {
                 context.location = location;
                 delete context.missingLocation;
+            } else {
+                context.missingLocation = true;
+                delete context.location;
             }
             return resolve(context);
         });
@@ -874,27 +878,27 @@ const actions = {
             console.log('runGeocoder function called');
             location = '';
             if (context.location) {
-                    // Geocode an address
-                    return googleMapsClient.geocode({
-                      address: context.location
-                    }, function(err, response) {
-                        if (!err) {
-                            context.lat = response.json.results[0]['geometry']['location']['lat'];
-                            context.long = response.json.results[0]['geometry']['location']['lng'];
-                            lat = context.lat;
-                            long = context.long;
-                            delete context.missingLocation;
-                            delete context.location;
-                            return resolve(context);
-                        } else {err} {
-                            context.err = true;
-                            delete context.lat;
-                            delete context.long;
-                            delete context.location;
-                            delete context.missingLocation;
-                            return resolve(context);
-                        }
-                    });
+                // Geocode an address
+                return googleMapsClient.geocode({
+                  address: context.location
+                }, function(err, response) {
+                    if (!err) {
+                        lat = response.json.results[0]['geometry']['location']['lat'];
+                        long = response.json.results[0]['geometry']['location']['lng'];
+                        context.lat = lat;
+                        context.long = long;
+                        delete context.missingLocation;
+                        delete context.location;
+                        return resolve(context);
+                    } else {err} {
+                        context.err = true;
+                        delete context.lat;
+                        delete context.long;
+                        delete context.location;
+                        delete context.missingLocation;
+                        return resolve(context);
+                    }
+                });
             }
         });
     },
@@ -1195,7 +1199,7 @@ const actions = {
     },
 
     saveFood({sessionId,context, entities}) {
-        console.log('checkContext function called');
+        console.log('saveFood function called');
         food = firstEntityValue(entities,'food');
         if (food) {
             context.food = food;   
@@ -1208,28 +1212,7 @@ const actions = {
     },
 
     saveFoodLocation({sessionId,context, entities}) {
-        console.log('checkContext function called');
-        food = firstEntityValue(entities,'food');
-        location = firstEntityValue(entities,'location');
-        if (food) {
-            context.food = food;
-            delete context.missingFood; 
-        } else {
-            context.missingFood = true;
-            delete context.food;
-        }
-        if (location) {
-            context.location = location;
-            delete context.missingLocation;
-        } else {
-            context.missingLocation = true;
-            delete context.location;
-        }
-        return context;
-    },
-
-    saveFoodLocation({sessionId,context, entities}) {
-        console.log('checkContext function called');
+        console.log('saveFoodLocation function called');
         food = firstEntityValue(entities,'food');
         location = firstEntityValue(entities,'location');
         if (food) {
@@ -1254,9 +1237,13 @@ const actions = {
         console.log(context);
         if (recGiven) {
             context.recGiven = recGiven;
+            delete context.location;
+            delete context.noRec;
         }
         if (noRec) {
             context.noRec = noRec;
+            delete context.recGiven;
+            delete context.location;
         }
 
         /*
@@ -1267,15 +1254,17 @@ const actions = {
 
         if (location) {
             context.location = location;   
+            delete context.noRec;
+            delete context.recGiven;
         }
 
         if (Object.keys(context).length==0) {
-            console.log("this code runs");
             context.noContext = true;
             delete context.recGiven;
             delete context.noRec;
             delete context.location;
         }
+        console.log(context);
         return context;
     },
 
